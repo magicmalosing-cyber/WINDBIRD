@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>風鳥堂 - 線上訂餐</title>
+    <title>風鳥堂 (中山店) - 線上訂餐</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
@@ -432,8 +432,8 @@
 <body>
 
     <header>
-        <div class="header-title">風鳥堂</div>
-        <div class="header-subtitle">官方 LINE: @694ptdsi ‧ 嚴選台灣優質好茶</div>
+        <div class="header-title">風鳥堂 (中山店)</div>
+        <div class="header-subtitle">官方 LINE ID: @694hwlae ‧ 嚴選台灣優質好茶</div>
     </header>
 
     <div class="container">
@@ -474,11 +474,11 @@
             <div class="option-group">
                 <div class="option-title">甜度</div>
                 <div class="options-flex" id="sweetnessOptions">
-                    <div class="option-chip selected" onclick="selectOption(this, 'sweetness')">正常糖</div>
-                    <div class="option-chip" onclick="selectOption(this, 'sweetness')">少糖 (7分)</div>
-                    <div class="option-chip" onclick="selectOption(this, 'sweetness')">半糖 (5分)</div>
-                    <div class="option-chip" onclick="selectOption(this, 'sweetness')">微糖 (3分)</div>
-                    <div class="option-chip" onclick="selectOption(this, 'sweetness')">無糖 (0分)</div>
+                    <div class="option-chip selected" onclick="selectOption(this, 'sweetness')">標準甜</div>
+                    <div class="option-chip" onclick="selectOption(this, 'sweetness')">少糖</div>
+                    <div class="option-chip" onclick="selectOption(this, 'sweetness')">半糖</div>
+                    <div class="option-chip" onclick="selectOption(this, 'sweetness')">微糖</div>
+                    <div class="option-chip" onclick="selectOption(this, 'sweetness')">無糖</div>
                 </div>
             </div>
 
@@ -489,18 +489,28 @@
                     <div class="option-chip" onclick="selectOption(this, 'ice')">少冰</div>
                     <div class="option-chip" onclick="selectOption(this, 'ice')">微冰</div>
                     <div class="option-chip" onclick="selectOption(this, 'ice')">去冰</div>
+                    <div class="option-chip" onclick="selectOption(this, 'ice')">完全去冰</div>
+                    <div class="option-chip" onclick="selectOption(this, 'ice')">溫飲</div>
                     <div class="option-chip" onclick="selectOption(this, 'ice')">熱飲</div>
                 </div>
             </div>
 
             <div class="option-group">
-                <div class="option-title">加料 (+10元起)</div>
+                <div class="option-title">加料區</div>
                 <div class="options-flex" id="toppingOptions">
-                    <div class="option-chip" onclick="toggleTopping(this, '波霸', 10)">波霸 (+10)</div>
+                    <div class="option-chip" onclick="toggleTopping(this, '波霸珍珠', 10)">波霸珍珠 (+10)</div>
+                    <div class="option-chip" onclick="toggleTopping(this, '小珍珠', 10)">小珍珠 (+10)</div>
+                    <div class="option-chip" onclick="toggleTopping(this, '椰果', 10)">椰果 (+10)</div>
+                    <div class="option-chip" onclick="toggleTopping(this, '仙草凍', 10)">仙草凍 (+10)</div>
+                    <div class="option-chip" onclick="toggleTopping(this, '愛玉凍', 10)">愛玉凍 (+10)</div>
+                    <div class="option-chip" onclick="toggleTopping(this, '杏仁凍', 15)">杏仁凍 (+15)</div>
                     <div class="option-chip" onclick="toggleTopping(this, '手工藍莓凍', 15)">手工藍莓凍 (+15)</div>
                     <div class="option-chip" onclick="toggleTopping(this, '寒天晶球', 10)">寒天晶球 (+10)</div>
                     <div class="option-chip" onclick="toggleTopping(this, '蘆薈果漾', 10)">蘆薈果漾 (+10)</div>
                     <div class="option-chip" onclick="toggleTopping(this, '統一布丁', 15)">統一布丁 (+15)</div>
+                    <div class="option-chip" onclick="toggleTopping(this, '起司奶蓋', 20)">起司奶蓋 (+20)</div>
+                    <div class="option-chip" onclick="toggleTopping(this, '海鹽奶蓋', 20)">海鹽奶蓋 (+20)</div>
+                    <div class="option-chip" onclick="toggleTopping(this, '紅豆', 10)">紅豆 (+10)</div>
                 </div>
             </div>
 
@@ -519,11 +529,8 @@
             <div id="cartItemsList"></div>
 
             <div style="border-top: 2px solid var(--border-color); padding-top: 1rem; margin-top: 1rem;">
-                <div class="option-title">取餐方式</div>
-                <div class="options-flex" style="margin-bottom: 1rem;">
-                    <div class="option-chip selected" onclick="selectOrderType(this, '外帶')">現場外帶</div>
-                    <div class="option-chip" onclick="selectOrderType(this, '外送')">外送服務</div>
-                </div>
+                <label style="font-size: 0.85rem; font-weight: bold;">預計取餐時間</label>
+                <input type="text" id="custPickupTime" class="form-input" placeholder="例如：14:30 左右自取">
 
                 <label style="font-size: 0.85rem; font-weight: bold;">訂購人姓名</label>
                 <input type="text" id="custName" class="form-input" placeholder="請輸入姓名">
@@ -531,13 +538,8 @@
                 <label style="font-size: 0.85rem; font-weight: bold;">聯絡電話</label>
                 <input type="tel" id="custPhone" class="form-input" placeholder="0912345678">
 
-                <div id="addressGroup" style="display: none;">
-                    <label style="font-size: 0.85rem; font-weight: bold;">外送地址</label>
-                    <input type="text" id="custAddress" class="form-input" placeholder="請輸入外送完整地址">
-                </div>
-
                 <label style="font-size: 0.85rem; font-weight: bold;">備註需求</label>
-                <input type="text" id="custNote" class="form-input" placeholder="例如：發票載具或預計取餐時間">
+                <input type="text" id="custNote" class="form-input" placeholder="例如：發票載具或其他需求">
 
                 <button class="btn-primary" onclick="goToPayment()">
                     前往付款 / 確認訂單 ➔
@@ -562,29 +564,22 @@
             <div class="pay-tab">
                 <button class="pay-tab-btn active" id="btnTabLinePay" onclick="switchPayTab('linepay')">LINE Pay</button>
                 <button class="pay-tab-btn" id="btnTabJko" onclick="switchPayTab('jko')">街口支付</button>
-                <button class="pay-tab-btn" id="btnTabCash" onclick="switchPayTab('cash')">現場付現</button>
             </div>
 
             <div class="qr-box" id="payBoxLinePay">
                 <p style="font-size: 0.85rem; font-weight: bold; color: var(--text-dark);">請掃描或長按圖片儲存 QR Code 付款</p>
                 <img src="linepay.jpg" alt="LINE Pay QR Code" class="qr-img">
-                <p style="font-size: 0.8rem; color: var(--text-muted);">付款完成後請點擊下方按鈕送出訂單</p>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">付款完成後請點擊下方按鈕送出訂單明細</p>
             </div>
 
             <div class="qr-box" id="payBoxJko" style="display: none;">
                 <p style="font-size: 0.85rem; font-weight: bold; color: var(--text-dark);">請掃描或長按圖片儲存 QR Code 付款</p>
                 <img src="jkopay.jpg" alt="街口支付 QR Code" class="qr-img">
-                <p style="font-size: 0.8rem; color: var(--text-muted);">付款完成後請點擊下方按鈕送出訂單</p>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">付款完成後請點擊下方按鈕送出訂單明細</p>
             </div>
 
-            <div class="qr-box" id="payBoxCash" style="display: none; padding: 2rem 1rem;">
-                <i class="fa-solid fa-store" style="font-size: 2.5rem; color: var(--primary); margin-bottom: 0.5rem;"></i>
-                <p style="font-size: 0.95rem; font-weight: bold;">現場取餐付款</p>
-                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.3rem;">請於取餐時直接至櫃檯結帳即可。</p>
-            </div>
-
-            <button class="btn-primary" onclick="submitOrderToBackend()">
-                <i class="fa-solid fa-check" style="font-size: 1.1rem;"></i> 確認已付款，送出訂單並列印
+            <button class="btn-primary" onclick="submitOrder()">
+                <i class="fa-brands fa-line" style="font-size: 1.3rem;"></i> 已完成付款，傳送訂單至 LINE
             </button>
         </div>
     </div>
@@ -593,16 +588,12 @@
         const SPREADSHEET_ID = '1_5ynzti6fA6RUq5UUjB28oxw2u2eFMs4RiGRzUmKvQU';
         const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
 
-        // ⚠️ 請填入您在 Google Apps Script 部署 Web App 後取得的網址
-        const WEB_APP_URL = "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL";
-
         let menuData = [];
         let cart = [];
         let currentItem = null;
-        let selectedSweetness = '正常糖';
+        let selectedSweetness = '標準甜';
         let selectedIce = '正常冰';
         let selectedToppings = [];
-        let orderType = '外帶';
         let selectedPayMethod = 'LINE Pay';
 
         async function fetchMenuFromSheet() {
@@ -717,7 +708,7 @@
 
         function openItemModal(name, price) {
             currentItem = { name, price };
-            selectedSweetness = '正常糖';
+            selectedSweetness = '標準甜';
             selectedIce = '正常冰';
             selectedToppings = [];
 
@@ -840,27 +831,12 @@
             }
         }
 
-        function selectOrderType(el, type) {
-            orderType = type;
-            const parent = el.parentElement;
-            parent.querySelectorAll('.option-chip').forEach(c => c.classList.remove('selected'));
-            el.classList.add('selected');
-
-            document.getElementById('addressGroup').style.display = type === '外送' ? 'block' : 'none';
-        }
-
         function goToPayment() {
             const name = document.getElementById('custName').value.trim();
             const phone = document.getElementById('custPhone').value.trim();
-            const address = document.getElementById('custAddress').value.trim();
 
             if (!name || !phone) {
                 alert('請填寫姓名與聯絡電話！');
-                return;
-            }
-
-            if (orderType === '外送' && !address) {
-                alert('請填寫外送地址！');
                 return;
             }
 
@@ -874,11 +850,9 @@
         function switchPayTab(type) {
             document.getElementById('btnTabLinePay').classList.remove('active');
             document.getElementById('btnTabJko').classList.remove('active');
-            document.getElementById('btnTabCash').classList.remove('active');
 
             document.getElementById('payBoxLinePay').style.display = 'none';
             document.getElementById('payBoxJko').style.display = 'none';
-            document.getElementById('payBoxCash').style.display = 'none';
 
             if (type === 'linepay') {
                 document.getElementById('btnTabLinePay').classList.add('active');
@@ -888,54 +862,32 @@
                 document.getElementById('btnTabJko').classList.add('active');
                 document.getElementById('payBoxJko').style.display = 'block';
                 selectedPayMethod = '街口支付';
-            } else if (type === 'cash') {
-                document.getElementById('btnTabCash').classList.add('active');
-                document.getElementById('payBoxCash').style.display = 'block';
-                selectedPayMethod = '現場付現';
             }
         }
 
-        // 核心：將訂單自動傳送至 Google 試算表與 LINE 後台
-        function submitOrderToBackend() {
+        function submitOrder() {
+            const pickupTime = document.getElementById('custPickupTime').value.trim();
             const name = document.getElementById('custName').value.trim();
             const phone = document.getElementById('custPhone').value.trim();
-            const address = document.getElementById('custAddress').value.trim();
             const note = document.getElementById('custNote').value.trim();
             const total = cart.reduce((sum, item) => sum + (item.finalPrice * item.qty), 0);
-
-            // 整理購物車明細為文字格式
-            let itemsSummary = cart.map(item => {
-                const toppingsText = item.toppings.length > 0 ? `+${item.toppings.map(t=>t.name).join(',')}` : '';
-                return `${item.name} x${item.qty} (${item.sweetness}/${item.ice}${toppingsText}) [$${item.finalPrice * item.qty}]`;
-            }).join(' / ');
-
-            const orderPayload = {
-                orderType: orderType,
-                payMethod: selectedPayMethod,
-                name: name,
-                phone: phone,
-                address: address || '無',
-                items: itemsSummary,
-                total: total,
-                note: note || '無'
-            };
-
-            // 傳送到 GAS 網頁應用程式
-            fetch(WEB_APP_URL, {
-                method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify(orderPayload)
-            }).then(() => {
-                alert('🎉 訂單已成功送出！風鳥堂已收到您的訂單，將立即為您準備。');
-                cart = [];
-                updateCart();
-                closeModal('payModal');
-                window.location.reload();
-            }).catch(error => {
-                console.error("送出失敗:", error);
-                alert('送出發生錯誤，請稍後再試或直接聯絡店家。');
+            
+            let orderSummary = `【風鳥堂 (中山店) 點餐明細】\n`;
+            if (pickupTime) orderSummary += `預計取餐時間：${pickupTime}\n`;
+            orderSummary += `付款方式：${selectedPayMethod} (已線上付款)\n`;
+            orderSummary += `訂購人：${name} (${phone})\n`;
+            orderSummary += `-------------------\n`;
+            cart.forEach(item => {
+                const toppingsText = item.toppings.length > 0 ? ` + ${item.toppings.map(t=>t.name).join(', ')}` : '';
+                orderSummary += `• ${item.name} x${item.qty} ($${item.finalPrice * item.qty})\n  (${item.sweetness}/${item.ice}${toppingsText})\n`;
             });
+            orderSummary += `-------------------\n`;
+            orderSummary += `金額總計：$${total} 元\n`;
+            if (note) orderSummary += `備註：${note}\n`;
+
+            const encodedMessage = encodeURIComponent(orderSummary);
+            // 透過指定的官方帳號自動開啟 LINE 並帶入訊息
+            window.location.href = `https://line.me/R/oaMessage/@694hwlae/?${encodedMessage}`;
         }
 
         fetchMenuFromSheet();
