@@ -182,7 +182,7 @@
         .modal-backdrop {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.6);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -365,6 +365,46 @@
             border: 1px solid var(--border-color);
             border-radius: 6px;
         }
+
+        /* Payment QR Area */
+        .qr-box {
+            text-align: center;
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-top: 1rem;
+        }
+
+        .qr-img {
+            width: 220px;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            margin: 0.5rem 0;
+        }
+
+        .pay-tab {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .pay-tab-btn {
+            padding: 0.4rem 1rem;
+            border: 1px solid var(--border-color);
+            background: white;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .pay-tab-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
     </style>
 </head>
 <body>
@@ -481,10 +521,53 @@
                 <label style="font-size: 0.85rem; font-weight: bold;">備註需求</label>
                 <input type="text" id="custNote" class="form-input" placeholder="例如：發票載具或預計取餐時間">
 
-                <button class="btn-primary" onclick="submitOrder()">
-                    <i class="fa-brands fa-line" style="font-size: 1.3rem;"></i> 送出訂單至 LINE
+                <button class="btn-primary" onclick="goToPayment()">
+                    前往付款 / 確認訂單 ➔
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- 付款碼彈窗 Modal -->
+    <div class="modal-backdrop" id="payModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title">選擇付款方式</div>
+                <button class="close-btn" onclick="closeModal('payModal')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div style="text-align: center; margin-bottom: 0.5rem;">
+                <div style="font-size: 0.9rem; color: var(--text-muted);">訂單應付總金額</div>
+                <div style="font-size: 1.8rem; font-weight: 800; color: var(--accent);" id="payModalTotal">$0</div>
+            </div>
+
+            <div class="pay-tab">
+                <button class="pay-tab-btn active" id="btnTabLinePay" onclick="switchPayTab('linepay')">LINE Pay</button>
+                <button class="pay-tab-btn" id="btnTabJko" onclick="switchPayTab('jko')">街口支付</button>
+                <button class="pay-tab-btn" id="btnTabCash" onclick="switchPayTab('cash')">現場付現</button>
+            </div>
+
+            <div class="qr-box" id="payBoxLinePay">
+                <p style="font-size: 0.85rem; font-weight: bold; color: var(--text-dark);">請掃描或長按圖片儲存 QR Code 付款</p>
+                <img src="linepay.jpg" alt="LINE Pay QR Code" class="qr-img">
+                <p style="font-size: 0.8rem; color: var(--text-muted);">付款完成後請點擊下方按鈕送出訂單明細</p>
+            </div>
+
+            <div class="qr-box" id="payBoxJko" style="display: none;">
+                <p style="font-size: 0.85rem; font-weight: bold; color: var(--text-dark);">請掃描或長按圖片儲存 QR Code 付款</p>
+                <img src="jkopay.jpg" alt="街口支付 QR Code" class="qr-img">
+                <p style="font-size: 0.8rem; color: var(--text-muted);">付款完成後請點擊下方按鈕送出訂單明細</p>
+            </div>
+
+            <div class="qr-box" id="payBoxCash" style="display: none; padding: 2rem 1rem;">
+                <i class="fa-solid fa-store" style="font-size: 2.5rem; color: var(--primary); margin-bottom: 0.5rem;"></i>
+                <p style="font-size: 0.95rem; font-weight: bold;">現場取餐付款</p>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.3rem;">請於取餐時直接至櫃檯結帳即可。</p>
+            </div>
+
+            <button class="btn-primary" onclick="submitOrder()">
+                <i class="fa-brands fa-line" style="font-size: 1.3rem;"></i> 已完成付款，傳送訂單至 LINE
+            </button>
         </div>
     </div>
 
@@ -569,6 +652,7 @@
         let selectedIce = '正常冰';
         let selectedToppings = [];
         let orderType = '外帶';
+        let selectedPayMethod = 'LINE Pay';
 
         function renderMenu() {
             const container = document.getElementById('menuContainer');
@@ -744,11 +828,10 @@
             document.getElementById('addressGroup').style.display = type === '外送' ? 'block' : 'none';
         }
 
-        function submitOrder() {
+        function goToPayment() {
             const name = document.getElementById('custName').value.trim();
             const phone = document.getElementById('custPhone').value.trim();
             const address = document.getElementById('custAddress').value.trim();
-            const note = document.getElementById('custNote').value.trim();
 
             if (!name || !phone) {
                 alert('請填寫姓名與聯絡電話！');
@@ -761,9 +844,46 @@
             }
 
             const total = cart.reduce((sum, item) => sum + (item.finalPrice * item.qty), 0);
+            document.getElementById('payModalTotal').innerText = `$${total}`;
+
+            closeModal('cartModal');
+            document.getElementById('payModal').classList.add('active');
+        }
+
+        function switchPayTab(type) {
+            document.getElementById('btnTabLinePay').classList.remove('active');
+            document.getElementById('btnTabJko').classList.remove('active');
+            document.getElementById('btnTabCash').classList.remove('active');
+
+            document.getElementById('payBoxLinePay').style.display = 'none';
+            document.getElementById('payBoxJko').style.display = 'none';
+            document.getElementById('payBoxCash').style.display = 'none';
+
+            if (type === 'linepay') {
+                document.getElementById('btnTabLinePay').classList.add('active');
+                document.getElementById('payBoxLinePay').style.display = 'block';
+                selectedPayMethod = 'LINE Pay';
+            } else if (type === 'jko') {
+                document.getElementById('btnTabJko').classList.add('active');
+                document.getElementById('payBoxJko').style.display = 'block';
+                selectedPayMethod = '街口支付';
+            } else if (type === 'cash') {
+                document.getElementById('btnTabCash').classList.add('active');
+                document.getElementById('payBoxCash').style.display = 'block';
+                selectedPayMethod = '現場付現';
+            }
+        }
+
+        function submitOrder() {
+            const name = document.getElementById('custName').value.trim();
+            const phone = document.getElementById('custPhone').value.trim();
+            const address = document.getElementById('custAddress').value.trim();
+            const note = document.getElementById('custNote').value.trim();
+            const total = cart.reduce((sum, item) => sum + (item.finalPrice * item.qty), 0);
             
             let orderSummary = `【風鳥堂 點餐明細】\n`;
             orderSummary += `取餐類別：${orderType}\n`;
+            orderSummary += `付款方式：${selectedPayMethod}\n`;
             orderSummary += `訂購人：${name} (${phone})\n`;
             if (orderType === '外送') orderSummary += `地址：${address}\n`;
             orderSummary += `-------------------\n`;
@@ -775,7 +895,6 @@
             orderSummary += `金額總計：$${total} 元\n`;
             if (note) orderSummary += `備註：${note}\n`;
 
-            // 將文字轉碼並喚起 LINE 自動填入輸入框
             const encodedMessage = encodeURIComponent(orderSummary);
             window.location.href = `https://line.me/R/oaMessage/@694hwlae/?${encodedMessage}`;
         }
