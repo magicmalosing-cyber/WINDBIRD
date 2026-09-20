@@ -310,7 +310,7 @@
         }
 
         .btn-primary {
-            background-color: var(--primary-light);
+            background-color: #06c755;
             color: white;
             border: none;
             padding: 0.75rem 1.5rem;
@@ -320,13 +320,16 @@
             width: 100%;
             margin-top: 1rem;
             font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
 
         .btn-primary:hover {
-            background-color: var(--primary);
+            background-color: #05b34c;
         }
 
-        /* Cart Items List */
         .cart-item {
             display: flex;
             justify-content: space-between;
@@ -443,7 +446,7 @@
                 </div>
             </div>
 
-            <button class="btn-primary" onclick="confirmAddToCart()">加入購物車</button>
+            <button class="btn-primary" style="background-color: var(--primary);" onclick="confirmAddToCart()">加入購物車</button>
         </div>
     </div>
 
@@ -476,15 +479,16 @@
                 </div>
 
                 <label style="font-size: 0.85rem; font-weight: bold;">備註需求</label>
-                <input type="text" id="custNote" class="form-input" placeholder="例如：發票載具或特殊需求">
+                <input type="text" id="custNote" class="form-input" placeholder="例如：發票載具或預計取餐時間">
 
-                <button class="btn-primary" onclick="submitOrder()">確認送出訂單</button>
+                <button class="btn-primary" onclick="submitOrder()">
+                    <i class="fa-brands fa-line" style="font-size: 1.3rem;"></i> 通過 LINE 發送訂單通知
+                </button>
             </div>
         </div>
     </div>
 
     <script>
-        // 菜單資料
         const menuData = [
             {
                 id: 'cat-1',
@@ -505,7 +509,7 @@
                 title: '🧋 醇品奶茶',
                 items: [
                     { name: '招牌風鳥奶茶', price: 50, desc: '招牌茶底調配，香醇完美比例' },
-                    { name: '波霸奶茶', price: 55, desc: ' Q彈大波霸加上濃郁奶茶' },
+                    { name: '波霸奶茶', price: 55, desc: 'Q彈大波霸加上濃郁奶茶' },
                     { name: '文青高山奶烏龍', price: 50, desc: '烏龍茶香與奶香交織，層次豐富' },
                     { name: '午後的輕奶茶', price: 45, desc: '輕巧無負擔，順口微甜' },
                     { name: '玫瑰岩鹽奶茶', price: 55, desc: '咸甜交織，玫瑰花香誘人' },
@@ -566,7 +570,6 @@
         let selectedToppings = [];
         let orderType = '外帶';
 
-        // 初始化菜單畫面
         function renderMenu() {
             const container = document.getElementById('menuContainer');
             container.innerHTML = '';
@@ -607,7 +610,6 @@
             }
         }
 
-        // Modal 操作
         function openItemModal(name, price) {
             currentItem = { name, price };
             selectedSweetness = '正常糖';
@@ -617,7 +619,6 @@
             document.getElementById('modalItemName').innerText = name;
             document.getElementById('modalItemPrice').innerText = `$${price}`;
 
-            // 重置選項標籤
             resetChipSelection('sweetnessOptions', 0);
             resetChipSelection('iceOptions', 0);
             document.querySelectorAll('#toppingOptions .option-chip').forEach(c => c.classList.remove('selected'));
@@ -774,15 +775,15 @@
             orderSummary += `金額總計：$${total} 元\n`;
             if (note) orderSummary += `備註：${note}\n`;
 
-            alert(`訂單送出成功！\n\n${orderSummary}`);
+            // 設定 LINE 官方帳號的轉發連結
+            const lineID = "@694hwlae";
+            const encodedMessage = encodeURIComponent(orderSummary);
+            const lineUrl = `https://line.me/R/oaMessage/${lineID}/?${encodedMessage}`;
 
-            // 清空購物車
-            cart = [];
-            updateCart();
-            closeModal('cartModal');
+            // 開啟 LINE
+            window.location.href = lineUrl;
         }
 
-        // 初始化執行
         renderMenu();
     </script>
 </body>
