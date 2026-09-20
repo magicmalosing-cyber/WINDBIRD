@@ -59,6 +59,19 @@
             padding: 1rem;
         }
 
+        /* 營業時間休息提示遮罩 */
+        .closed-overlay {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 1rem;
+            text-align: center;
+            font-weight: bold;
+            border-radius: var(--radius);
+            margin-bottom: 1.5rem;
+            border: 1px solid #fecaca;
+            display: none;
+        }
+
         .category-nav {
             display: flex;
             overflow-x: auto;
@@ -345,6 +358,11 @@
             background-color: #05b34c;
         }
 
+        .btn-primary:disabled {
+            background-color: #94a3b8;
+            cursor: not-allowed;
+        }
+
         .cart-item {
             display: flex;
             justify-content: space-between;
@@ -372,13 +390,15 @@
             font-weight: bold;
         }
 
-        .form-input {
+        .form-input, .form-select {
             width: 100%;
             padding: 0.6rem;
             margin-top: 0.3rem;
             margin-bottom: 0.8rem;
             border: 1px solid var(--border-color);
             border-radius: 6px;
+            font-size: 0.95rem;
+            background: white;
         }
 
         /* Payment QR Area */
@@ -433,10 +453,15 @@
 
     <header>
         <div class="header-title">風鳥堂</div>
-        <div class="header-subtitle">官方 LINE ID: @694ptdsi ‧ 嚴選台灣優質好茶</div>
+        <div class="header-subtitle">官方 LINE ID: @694ptdsi ‧ 營業時間 11:00 ~ 22:00</div>
     </header>
 
     <div class="container">
+        <!-- 營業時間提示 -->
+        <div class="closed-overlay" id="closedOverlay">
+            <i class="fa-solid fa-store-slash"></i> 目前為非營業時間（營業時間為 11:00 ~ 22:00），暫不開放線上點餐！
+        </div>
+
         <!-- 分類導航欄 -->
         <nav class="category-nav" id="categoryNav">
             <button class="category-btn active" onclick="scrollToCategory('all')">載入中...</button>
@@ -474,24 +499,30 @@
             <div class="option-group">
                 <div class="option-title">甜度</div>
                 <div class="options-flex" id="sweetnessOptions">
-                    <div class="option-chip selected" onclick="selectOption(this, 'sweetness')">標準甜</div>
-                    <div class="option-chip" onclick="selectOption(this, 'sweetness')">少糖</div>
-                    <div class="option-chip" onclick="selectOption(this, 'sweetness')">半糖</div>
-                    <div class="option-chip" onclick="selectOption(this, 'sweetness')">微糖</div>
-                    <div class="option-chip" onclick="selectOption(this, 'sweetness')">無糖</div>
+                    <div class="option-chip selected" onclick="selectOption(this, 'sweetness', 0)">多糖</div>
+                    <div class="option-chip" onclick="selectOption(this, 'sweetness', 0)">正常糖</div>
+                    <div class="option-chip" onclick="selectOption(this, 'sweetness', 0)">少糖(7分)</div>
+                    <div class="option-chip" onclick="selectOption(this, 'sweetness', 0)">半糖(5分)</div>
+                    <div class="option-chip" onclick="selectOption(this, 'sweetness', 0)">微糖(3分)</div>
+                    <div class="option-chip" onclick="selectOption(this, 'sweetness', 0)">二分糖(2分)</div>
+                    <div class="option-chip" onclick="selectOption(this, 'sweetness', 0)">一分糖(1分)</div>
+                    <div class="option-chip" onclick="selectOption(this, 'sweetness', 0)">無糖</div>
+                    <div class="option-chip" onclick="selectOption(this, 'sweetness', 0)">赤藻糖微糖</div>
+                    <div class="option-chip" onclick="selectOption(this, 'sweetness', 5)">赤藻糖半糖 (+5)</div>
+                    <div class="option-chip" onclick="selectOption(this, 'sweetness', 10)">赤藻糖全糖 (+10)</div>
                  </div>
             </div>
 
             <div class="option-group">
                 <div class="option-title">冰塊</div>
                 <div class="options-flex" id="iceOptions">
-                    <div class="option-chip selected" onclick="selectOption(this, 'ice')">正常冰</div>
-                    <div class="option-chip" onclick="selectOption(this, 'ice')">少冰</div>
-                    <div class="option-chip" onclick="selectOption(this, 'ice')">微冰</div>
-                    <div class="option-chip" onclick="selectOption(this, 'ice')">去冰</div>
-                    <div class="option-chip" onclick="selectOption(this, 'ice')">完全去冰</div>
-                    <div class="option-chip" onclick="selectOption(this, 'ice')">溫飲</div>
-                    <div class="option-chip" onclick="selectOption(this, 'ice')">熱飲</div>
+                    <div class="option-chip selected" onclick="selectOption(this, 'ice', 0)">多冰</div>
+                    <div class="option-chip" onclick="selectOption(this, 'ice', 0)">正常冰</div>
+                    <div class="option-chip" onclick="selectOption(this, 'ice', 0)">少冰</div>
+                    <div class="option-chip" onclick="selectOption(this, 'ice', 0)">微冰</div>
+                    <div class="option-chip" onclick="selectOption(this, 'ice', 0)">去冰</div>
+                    <div class="option-chip" onclick="selectOption(this, 'ice', 0)">常溫</div>
+                    <div class="option-chip" onclick="selectOption(this, 'ice', 0)">溫熱</div>
                 </div>
             </div>
 
@@ -527,7 +558,9 @@
 
             <div style="border-top: 2px solid var(--border-color); padding-top: 1rem; margin-top: 1rem;">
                 <label style="font-size: 0.85rem; font-weight: bold;">預計取餐時間</label>
-                <input type="text" id="custPickupTime" class="form-input" placeholder="例如：14:30 左右自取">
+                <select id="custPickupTime" class="form-select">
+                    <!-- 動態帶入 -->
+                </select>
 
                 <label style="font-size: 0.85rem; font-weight: bold;">訂購人姓名</label>
                 <input type="text" id="custName" class="form-input" placeholder="請輸入姓名">
@@ -538,7 +571,7 @@
                 <label style="font-size: 0.85rem; font-weight: bold;">備註需求</label>
                 <input type="text" id="custNote" class="form-input" placeholder="例如：發票載具或其他需求">
 
-                <button class="btn-primary" onclick="goToPayment()">
+                <button class="btn-primary" id="goToPayBtn" onclick="goToPayment()">
                     前往付款 / 確認訂單 ➔
                 </button>
             </div>
@@ -584,17 +617,80 @@
     <script>
         const SPREADSHEET_ID = '1_5ynzti6fA6RUq5UUjB28oxw2u2eFMs4RiGRzUmKvQU';
         const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
-        
-        // 請將下方引號內替換為您當初 Google Apps Script 部署後的網頁應用程式 URL
         const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxpuB_w20nq4ZtldzABmuVqu-iUUgDFW1nBQpuFP2j_8Yj2cv7qla-atfDfCWDFxxb5RA/exec';
 
         let menuData = [];
         let cart = [];
         let currentItem = null;
-        let selectedSweetness = '標準甜';
-        let selectedIce = '正常冰';
+        let selectedSweetness = '多糖';
+        let sweetnessPrice = 0;
+        let selectedIce = '多冰';
         let selectedToppings = [];
         let selectedPayMethod = 'LINE Pay';
+        let isStoreOpen = true;
+
+        // 檢查營業時間 (11:00 ~ 22:00)
+        function checkBusinessHours() {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const currentTimeVal = hours * 60 + minutes;
+
+            const openTimeVal = 11 * 60; // 11:00
+            const closeTimeVal = 22 * 60; // 22:00
+
+            if (currentTimeVal < openTimeVal || currentTimeVal > closeTimeVal) {
+                isStoreOpen = false;
+                document.getElementById('closedOverlay').style.display = 'block';
+                document.getElementById('cartBar').style.opacity = '0.5';
+            } else {
+                isStoreOpen = true;
+                document.getElementById('closedOverlay').style.display = 'none';
+            }
+            generatePickupTimeOptions();
+        }
+
+        // 產生 15 分鐘為間隔的取餐時間選項
+        function generatePickupTimeOptions() {
+            const select = document.getElementById('custPickupTime');
+            select.innerHTML = '';
+
+            const now = new Date();
+            // 從現在起算 15 分鐘後
+            let targetTime = new Date(now.getTime() + 15 * 60000);
+
+            let currentMinutes = targetTime.getHours() * 60 + targetTime.getMinutes();
+            const openLimit = 11 * 60;
+            const closeLimit = 22 * 60;
+
+            // 如果還沒到營業開始時間，從 11:15 開始起算
+            if (currentMinutes < openLimit) {
+                currentMinutes = openLimit + 15;
+            }
+
+            let count = 0;
+            // 最多往後產生 12 個選項（3小時內）
+            while (currentMinutes <= closeLimit && count < 12) {
+                const h = Math.floor(currentMinutes / 60);
+                const m = currentMinutes % 60;
+                const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+
+                const option = document.createElement('option');
+                option.value = `${timeStr} 取餐`;
+                option.innerText = `${timeStr} (約 15 分鐘後起)`;
+                select.appendChild(option);
+
+                currentMinutes += 15;
+                count++;
+            }
+
+            if (select.options.length === 0) {
+                const option = document.createElement('option');
+                option.value = '營業時間外預約';
+                option.innerText = '目前非營業時間，將於明天營業日處理';
+                select.appendChild(option);
+            }
+        }
 
         async function fetchMenuFromSheet() {
             try {
@@ -620,13 +716,8 @@
                     if (status === '下架') return;
 
                     if (!categoriesMap[catId]) {
-                        categoriesMap[catId] = {
-                            id: catId,
-                            title: catTitle,
-                            items: []
-                        };
+                        categoriesMap[catId] = { id: catId, title: catTitle, items: [] };
                     }
-
                     categoriesMap[catId].items.push({ name, price, desc, status });
                 });
 
@@ -674,7 +765,7 @@
                 let itemsHtml = cat.items.map(item => {
                     const isSoldOut = item.status === '售完';
                     return `
-                        <div class="menu-card ${isSoldOut ? 'sold-out' : ''}" onclick="${isSoldOut ? '' : `openItemModal('${item.name}',${item.price})`}">
+                        <div class="menu-card ${isSoldOut ? 'sold-out' : ''}" onclick="${isSoldOut || !isStoreOpen ? '' : `openItemModal('${item.name}',${item.price})`}">
                             <div class="item-info">
                                 <div class="item-name">${item.name} ${isSoldOut ? '<span class="sold-badge">已售完</span>' : ''}</div>
                                 <div class="item-desc">${item.desc}</div>
@@ -707,9 +798,15 @@
         }
 
         function openItemModal(name, price) {
+            if (!isStoreOpen) {
+                alert('目前為非營業時間，無法點餐喔！');
+                return;
+            }
+
             currentItem = { name, price };
-            selectedSweetness = '標準甜';
-            selectedIce = '正常冰';
+            selectedSweetness = '多糖';
+            sweetnessPrice = 0;
+            selectedIce = '多冰';
             selectedToppings = [];
 
             document.getElementById('modalItemName').innerText = name;
@@ -730,13 +827,18 @@
             });
         }
 
-        function selectOption(el, type) {
+        function selectOption(el, type, extraPrice = 0) {
             const parent = el.parentElement;
             parent.querySelectorAll('.option-chip').forEach(c => c.classList.remove('selected'));
             el.classList.add('selected');
 
-            if (type === 'sweetness') selectedSweetness = el.innerText;
-            if (type === 'ice') selectedIce = el.innerText;
+            if (type === 'sweetness') {
+                selectedSweetness = el.innerText;
+                sweetnessPrice = extraPrice;
+            }
+            if (type === 'ice') {
+                selectedIce = el.innerText;
+            }
         }
 
         function toggleTopping(el, name, price) {
@@ -754,7 +856,7 @@
 
         function confirmAddToCart() {
             const toppingCost = selectedToppings.reduce((sum, t) => sum + t.price, 0);
-            const finalPrice = currentItem.price + toppingCost;
+            const finalPrice = currentItem.price + sweetnessPrice + toppingCost;
 
             const cartItem = {
                 id: Date.now(),
@@ -781,6 +883,10 @@
         }
 
         function openCartModal() {
+            if (!isStoreOpen) {
+                alert('目前為非營業時間，無法點餐喔！');
+                return;
+            }
             if (cart.length === 0) {
                 alert('您的購物車目前是空的喔！');
                 return;
@@ -866,7 +972,7 @@
         }
 
         async function submitOrder() {
-            const pickupTime = document.getElementById('custPickupTime').value.trim();
+            const pickupTime = document.getElementById('custPickupTime').value;
             const name = document.getElementById('custName').value.trim();
             const phone = document.getElementById('custPhone').value.trim();
             const note = document.getElementById('custNote').value.trim();
@@ -887,10 +993,9 @@
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 正在傳送訂單...`;
 
             try {
-                // 發送請求給 Google Apps Script 後端，由後端直接透過 LINE API 推播
                 await fetch(GAS_WEB_APP_URL, {
                     method: 'POST',
-                    mode: 'no-cors', // 避免瀏覽器 CORS 擋下，GAS 仍能正常接收
+                    mode: 'no-cors',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(orderData)
                 });
@@ -900,10 +1005,8 @@
                 updateCart();
                 closeModal('payModal');
                 
-                // 清空表單欄位
                 document.getElementById('custName').value = '';
                 document.getElementById('custPhone').value = '';
-                document.getElementById('custPickupTime').value = '';
                 document.getElementById('custNote').value = '';
             } catch (error) {
                 console.error('送出失敗', error);
@@ -914,6 +1017,8 @@
             }
         }
 
+        // 初始化執行
+        checkBusinessHours();
         fetchMenuFromSheet();
     </script>
 </body>
