@@ -38,21 +38,20 @@
         <select id="orderType">
             <option value="現場自取">現場自取</option>
             <option value="外送">外送</option>
-        </select>
-
-        <label>取餐時間（中原標準時間）：</label>
-        <select id="pickupTime">
-            <!-- JavaScript 動態帶入往後 15 分鐘遞增選項 -->
+            <option value="現場付現">現場付現</option>
         </select>
 
         <label>付款方式：</label>
         <select id="payMethod">
             <option value="線上轉帳">線上轉帳</option>
-            <option value="其他">其他</option>
+            <option value="現場付款">現場付款</option>
         </select>
 
         <label>外送地址（若選擇外送請填寫）：</label>
         <input type="text" id="customerAddress" placeholder="請輸入外送地址（自取免填）">
+
+        <label>備註需求 / 預計取餐時間：</label>
+        <textarea id="customerNote" rows="2" placeholder="例如：少冰、不要太甜，或預計 15:30 取餐"></textarea>
     </div>
 
     <div class="section">
@@ -64,45 +63,27 @@
             
             <div class="options-group">
                 <span>甜度：</span><br>
-                <label><input type="radio" name="sugar_1" value="多糖"> 多糖</label>
-                <label><input type="radio" name="sugar_1" value="正常糖"> 正常糖</label>
-                <label><input type="radio" name="sugar_1" value="少糖(7分)"> 少糖(7分)</label>
-                <label><input type="radio" name="sugar_1" value="半糖(5分)" checked> 半糖(5分)</label>
-                <label><input type="radio" name="sugar_1" value="微糖(3分)"> 微糖(3分)</label>
-                <label><input type="radio" name="sugar_1" value="二分糖"> 二分糖</label>
-                <label><input type="radio" name="sugar_1" value="一分糖"> 一分糖</label>
+                <label><input type="radio" name="sugar_1" value="正常糖" checked> 正常糖</label>
+                <label><input type="radio" name="sugar_1" value="少糖"> 少糖</label>
+                <label><input type="radio" name="sugar_1" value="半糖"> 半糖</label>
+                <label><input type="radio" name="sugar_1" value="微糖"> 微糖</label>
                 <label><input type="radio" name="sugar_1" value="無糖"> 無糖</label>
-                <label><input type="radio" name="sugar_1" value="赤藻糖微糖"> 赤藻糖微糖</label>
-                <label><input type="radio" name="sugar_1" value="赤藻糖半糖+5"> 赤藻糖半糖(+5)</label>
-                <label><input type="radio" name="sugar_1" value="赤藻糖全糖+10"> 赤藻糖全糖(+10)</label>
             </div>
 
             <div class="options-group">
                 <span>冰塊：</span><br>
-                <label><input type="radio" name="ice_1" value="多冰"> 多冰</label>
                 <label><input type="radio" name="ice_1" value="正常冰" checked> 正常冰</label>
                 <label><input type="radio" name="ice_1" value="少冰"> 少冰</label>
                 <label><input type="radio" name="ice_1" value="微冰"> 微冰</label>
                 <label><input type="radio" name="ice_1" value="去冰"> 去冰</label>
                 <label><input type="radio" name="ice_1" value="常溫"> 常溫</label>
-                <label><input type="radio" name="ice_1" value="溫熱"> 溫熱</label>
             </div>
 
             <div class="options-group">
-                <span>加料：</span><br>
-                <label><input type="checkbox" name="topping_1" value="椰果+5" data-price="5"> 椰果 +5</label>
-                <label><input type="checkbox" name="topping_1" value="布丁+15" data-price="15"> 布丁 +15</label>
-                <label><input type="checkbox" name="topping_1" value="鮮奶+25" data-price="25"> 鮮奶 +25</label>
-                <label><input type="checkbox" name="topping_1" value="波霸+10" data-price="10"> 波霸 +10</label>
-                <label><input type="checkbox" name="topping_1" value="蘆薈+20" data-price="20"> 蘆薈 +20</label>
-                <label><input type="checkbox" name="topping_1" value="岩鹽奶霜+25" data-price="25"> 岩鹽奶霜 +25</label>
-                <label><input type="checkbox" name="topping_1" value="晶球+10" data-price="10"> 晶球 +10</label>
-                <label><input type="checkbox" name="topping_1" value="藍莓凍+15" data-price="15"> 藍莓凍 +15</label>
-                <label><input type="checkbox" name="topping_1" value="桂花釀+20" data-price="20"> 桂花釀 +20</label>
-                <label><input type="checkbox" name="topping_1" value="玫瑰釀+25" data-price="25"> 玫瑰釀 +25</label>
-                <label><input type="checkbox" name="topping_1" value="芒果爆珠+20" data-price="20"> 芒果爆珠 +20</label>
-                <label><input type="checkbox" name="topping_1" value="可爾彈丸+20" data-price="20"> 可爾彈丸 +20</label>
-                <label><input type="checkbox" name="topping_1" value="養樂多X2+20" data-price="20"> 養樂多X2 +20</label>
+                <span>加料 (+10元起)：</span><br>
+                <label><input type="checkbox" name="topping_1" value="珍珠+10" data-price="10"> 珍珠 (+10)</label>
+                <label><input type="checkbox" name="topping_1" value="椰果+10" data-price="10"> 椰果 (+10)</label>
+                <label><input type="checkbox" name="topping_1" value="布丁+15" data-price="15"> 布丁 (+15)</label>
             </div>
 
             <label>數量：<input type="number" class="item-qty" value="1" min="0" max="10" style="width: 80px; display: inline-block; margin-left: 10px;"></label>
@@ -119,36 +100,6 @@
 <script>
     // ⚠️ 請填入您最新的 Google Apps Script 部署網址 (結尾為 /exec)
     const WEB_APP_URL = "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL";
-
-    // 初始化動態取餐時間（以台灣時間往後 15 分鐘起算，每 15 分鐘遞增）
-    function initPickupTimes() {
-        const select = document.getElementById("pickupTime");
-        const now = new Date();
-        
-        // 調整為往後 15 分鐘
-        now.setMinutes(now.getMinutes() + 15);
-        
-        // 將分鐘對齊到最近的 15 分鐘倍數
-        let minutes = now.getMinutes();
-        let remainder = minutes % 15;
-        now.setMinutes(minutes + (15 - remainder));
-        now.setSeconds(0);
-
-        // 生成當天接下來的 8 個時間選項（共 2 小時範圍）
-        for (let i = 0; i < 8; i++) {
-            let hoursStr = String(now.getHours()).padStart(2, '0');
-            let minsStr = String(now.getMinutes()).padStart(2, '0');
-            let timeString = `${hoursStr}:${minsStr}`;
-            
-            let option = document.createElement("option");
-            option.value = timeString;
-            option.textContent = timeString;
-            select.appendChild(option);
-
-            // 每次加 15 分鐘
-            now.setMinutes(now.getMinutes() + 15);
-        }
-    }
 
     // 計算總金額
     function calculateTotal() {
@@ -168,13 +119,6 @@
                     itemTotal += parseInt(topping.getAttribute('data-price')) || 0;
                 });
 
-                // 檢查是否有赤藻糖加價選項
-                const selectedSugar = item.querySelector('input[name^="sugar_"]:checked');
-                if (selectedSugar) {
-                    if (selectedSugar.value.includes("+5")) itemTotal += 5;
-                    if (selectedSugar.value.includes("+10")) itemTotal += 10;
-                }
-
                 total += itemTotal * qty;
             }
         });
@@ -192,9 +136,9 @@
         const name = document.getElementById('customerName').value.trim();
         const phone = document.getElementById('customerPhone').value.trim();
         const orderType = document.getElementById('orderType').value;
-        const pickupTime = document.getElementById('pickupTime').value;
         const payMethod = document.getElementById('payMethod').value;
         const address = document.getElementById('customerAddress').value.trim();
+        const note = document.getElementById('customerNote').value.trim();
         const total = document.getElementById('totalAmount').innerText;
 
         if (!name || !phone) {
@@ -230,12 +174,12 @@
         const orderData = {
             name: name,
             phone: phone,
-            orderType: orderType + " (取餐時間: " + pickupTime + ")",
+            orderType: orderType,
             items: itemsSummary,
             total: total,
             payMethod: payMethod,
             address: address || "無",
-            note: "預計取餐: " + pickupTime
+            note: note || "無"
         };
 
         // 發送至 Google Apps Script
@@ -256,11 +200,6 @@
             alert('送出發生錯誤，請稍後再試。');
         });
     }
-
-    // 頁面載入時初始化取餐時間
-    window.onload = function() {
-        initPickupTimes();
-    };
 </script>
 
 </body>
