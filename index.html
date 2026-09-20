@@ -482,7 +482,7 @@
                 <input type="text" id="custNote" class="form-input" placeholder="例如：發票載具或預計取餐時間">
 
                 <button class="btn-primary" onclick="submitOrder()">
-                    <i class="fa-brands fa-line" style="font-size: 1.3rem;"></i> 通過 LINE 發送訂單通知
+                    <i class="fa-brands fa-line" style="font-size: 1.3rem;"></i> 複製訂單並開啟 LINE 送出
                 </button>
             </div>
         </div>
@@ -775,13 +775,16 @@
             orderSummary += `金額總計：$${total} 元\n`;
             if (note) orderSummary += `備註：${note}\n`;
 
-            // 設定 LINE 官方帳號的轉發連結
-            const lineID = "@694hwlae";
-            const encodedMessage = encodeURIComponent(orderSummary);
-            const lineUrl = `https://line.me/R/oaMessage/${lineID}/?${encodedMessage}`;
-
-            // 開啟 LINE
-            window.location.href = lineUrl;
+            // 複製訂單文字到剪貼簿
+            navigator.clipboard.writeText(orderSummary).then(() => {
+                alert('【訂單明細已自動複製！】\n\n系統將為您開啟風鳥堂 LINE 官方帳號，請在對話框中【長按貼上】並發送即可！');
+                // 開啟 LINE 官方帳號對話視窗
+                window.location.href = "https://line.me/R/ti/p/@694hwlae";
+            }).catch(() => {
+                // 如果瀏覽器限制剪貼簿，備用跳轉
+                alert('系統將開啟風鳥堂 LINE 官方帳號，請將訂單訊息發送給我們！');
+                window.location.href = "https://line.me/R/ti/p/@694hwlae";
+            });
         }
 
         renderMenu();
