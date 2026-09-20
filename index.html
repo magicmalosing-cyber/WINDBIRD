@@ -566,17 +566,17 @@
             <div class="qr-box" id="payBoxLinePay">
                 <p style="font-size: 0.85rem; font-weight: bold; color: var(--text-dark);">請掃描或長按圖片儲存 QR Code 付款</p>
                 <img src="linepay.jpg" alt="LINE Pay QR Code" class="qr-img">
-                <p style="font-size: 0.8rem; color: var(--text-muted);">付款完成後請點擊下方按鈕送出訂單明細</p>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">付款完成後請點擊下方按鈕送出訂單</p>
             </div>
 
             <div class="qr-box" id="payBoxJko" style="display: none;">
                 <p style="font-size: 0.85rem; font-weight: bold; color: var(--text-dark);">請掃描或長按圖片儲存 QR Code 付款</p>
                 <img src="jkopay.jpg" alt="街口支付 QR Code" class="qr-img">
-                <p style="font-size: 0.8rem; color: var(--text-muted);">付款完成後請點擊下方按鈕送出訂單明細</p>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">付款完成後請點擊下方按鈕送出訂單</p>
             </div>
 
-            <button class="btn-primary" onclick="submitOrder()">
-                <i class="fa-brands fa-line" style="font-size: 1.3rem;"></i> 已完成付款，傳送訂單至 LINE
+            <button class="btn-primary" id="submitOrderBtn" onclick="submitOrder()">
+                <i class="fa-brands fa-line" style="font-size: 1.3rem;"></i> 已完成付款，送出訂單
             </button>
         </div>
     </div>
@@ -584,6 +584,9 @@
     <script>
         const SPREADSHEET_ID = '1_5ynzti6fA6RUq5UUjB28oxw2u2eFMs4RiGRzUmKvQU';
         const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
+        
+        // 請將下方引號內替換為您當初 Google Apps Script 部署後的網頁應用程式 URL
+        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxpuB_w20nq4ZtldzABmuVqu-iUUgDFW1nBQpuFP2j_8Yj2cv7qla-atfDfCWDFxxb5RA/exec';
 
         let menuData = [];
         let cart = [];
@@ -862,44 +865,53 @@
             }
         }
 
-        function submitOrder() {
+        async function submitOrder() {
             const pickupTime = document.getElementById('custPickupTime').value.trim();
             const name = document.getElementById('custName').value.trim();
             const phone = document.getElementById('custPhone').value.trim();
             const note = document.getElementById('custNote').value.trim();
             const total = cart.reduce((sum, item) => sum + (item.finalPrice * item.qty), 0);
-            
-            let orderSummary = `【風鳥堂 點餐明細】\n`;
-            if (pickupTime) orderSummary += `預計取餐時間：${pickupTime}\n`;
-            orderSummary += `付款方式：${selectedPayMethod} (已線上付款)\n`;
-            orderSummary += `訂購人：${name} (${phone})\n`;
-            orderSummary += `-------------------\n`;
-            cart.forEach(item => {
-                const toppingsText = item.toppings.length > 0 ? ` + ${item.toppings.map(t=>t.name).join(', ')}` : '';
-                orderSummary += `• ${item.name} x${item.qty} ($${item.finalPrice * item.qty})\n  (${item.sweetness}/${item.ice}${toppingsText})\n`;
-            });
-            orderSummary += `-------------------\n`;
-            orderSummary += `金額總計：$${total} 元\n`;
-            if (note) orderSummary += `備註：${note}\n`;
 
-            // 自動複製到剪貼簿，確保萬一 LINE 被阻擋時顧客可手動貼上
-            navigator.clipboard.writeText(orderSummary).then(() => {
-                console.log('訂單內容已複製到剪貼簿');
-            }).catch(err => {
-                console.log('複製失敗', err);
-            });
+            const orderData = {
+                pickupTime: pickupTime,
+                payMethod: selectedPayMethod,
+                name: name,
+                phone: phone,
+                note: note,
+                total: total,
+                cart: cart
+            };
 
-            const encodedMessage = encodeURIComponent(orderSummary);
-            
-            // 使用雙重防護導向 LINE 官方帳號 (@694ptdsi)
-            const lineUniversalUrl = `https://line.me/R/oaMessage/@694ptdsi/?${encodedMessage}`;
-            
-            window.location.href = lineUniversalUrl;
-            
-            // 彈出提示告知使用者，若沒自動跳出可手動貼上
-            setTimeout(() => {
-                alert('訂單明細已自動複製！\n如果跳轉 LINE 後沒有自動帶入，請直接在對話框「長按貼上」即可傳送！');
-            }, 500);
+            const btn = document.getElementById('submitOrderBtn');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 正在傳送訂單...`;
+
+            try {
+                // 發送請求給 Google Apps Script 後端，由後端直接透過 LINE API 推播
+                await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // 避免瀏覽器 CORS 擋下，GAS 仍能正常接收
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orderData)
+                });
+
+                alert('訂單已成功送出！店家已收到通知。');
+                cart = [];
+                updateCart();
+                closeModal('payModal');
+                
+                // 清空表單欄位
+                document.getElementById('custName').value = '';
+                document.getElementById('custPhone').value = '';
+                document.getElementById('custPickupTime').value = '';
+                document.getElementById('custNote').value = '';
+            } catch (error) {
+                console.error('送出失敗', error);
+                alert('發送發生一點狀況，請直接與店家聯繫確認！');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-brands fa-line" style="font-size: 1.3rem;"></i> 已完成付款，送出訂單`;
+            }
         }
 
         fetchMenuFromSheet();
