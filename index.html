@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>風鳥堂 (中山店) - 線上訂餐</title>
+    <title>風鳥堂 - 線上訂餐</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
@@ -432,7 +432,7 @@
 <body>
 
     <header>
-        <div class="header-title">風鳥堂 (中山店)</div>
+        <div class="header-title">風鳥堂</div>
         <div class="header-subtitle">官方 LINE ID: @694ptdsi ‧ 嚴選台灣優質好茶</div>
     </header>
 
@@ -872,7 +872,7 @@
             const note = document.getElementById('custNote').value.trim();
             const total = cart.reduce((sum, item) => sum + (item.finalPrice * item.qty), 0);
             
-            let orderSummary = `【風鳥堂 (中山店) 點餐明細】\n`;
+            let orderSummary = `【風鳥堂 點餐明細】\n`;
             if (pickupTime) orderSummary += `預計取餐時間：${pickupTime}\n`;
             orderSummary += `付款方式：${selectedPayMethod} (已線上付款)\n`;
             orderSummary += `訂購人：${name} (${phone})\n`;
@@ -886,8 +886,8 @@
             if (note) orderSummary += `備註：${note}\n`;
 
             const encodedMessage = encodeURIComponent(orderSummary);
-            // 透過指定的官方帳號自動開啟 LINE 並帶入訊息
-            window.location.href = `https://line.me/R/oaMessage/@694hwlae/?${encodedMessage}`;
+            // 透過官方帳號 @694ptdsi 自動開啟 LINE 並帶入訊息
+            window.location.href = `https://line.me/R/oaMessage/@694ptdsi/?${encodedMessage}`;
         }
 
         fetchMenuFromSheet();
