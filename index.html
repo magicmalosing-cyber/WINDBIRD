@@ -126,7 +126,13 @@
             border: 1px solid transparent;
         }
 
-        .menu-card:hover {
+        .menu-card.sold-out {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #f1f5f9;
+        }
+
+        .menu-card:not(.sold-out):hover {
             transform: translateY(-2px);
             border-color: var(--primary-light);
         }
@@ -173,9 +179,18 @@
             transition: all 0.2s;
         }
 
-        .menu-card:hover .add-btn {
+        .menu-card:not(.sold-out):hover .add-btn {
             background-color: var(--primary);
             color: white;
+        }
+
+        .sold-badge {
+            background: #94a3b8;
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-weight: bold;
         }
 
         /* Modal Base */
@@ -405,6 +420,13 @@
             color: white;
             border-color: var(--primary);
         }
+
+        .loading-box {
+            text-align: center;
+            padding: 3rem;
+            font-size: 1.1rem;
+            color: var(--text-muted);
+        }
     </style>
 </head>
 <body>
@@ -417,17 +439,13 @@
     <div class="container">
         <!-- 分類導航欄 -->
         <nav class="category-nav" id="categoryNav">
-            <button class="category-btn active" onclick="scrollToCategory('all')">全部商品</button>
-            <button class="category-btn" onclick="scrollToCategory('cat-1')">🌿 台灣原生茶</button>
-            <button class="category-btn" onclick="scrollToCategory('cat-2')">🧋 醇品奶茶</button>
-            <button class="category-btn" onclick="scrollToCategory('cat-3')">🥛 馥韻鮮奶茶</button>
-            <button class="category-btn" onclick="scrollToCategory('cat-4')">🌟 不老經典特調</button>
-            <button class="category-btn" onclick="scrollToCategory('cat-5')">😊 穀果茶 (無咖啡因)</button>
-            <button class="category-btn" onclick="scrollToCategory('cat-6')">❄️ 酷冰尼 / 冰尼茶</button>
+            <button class="category-btn active" onclick="scrollToCategory('all')">載入中...</button>
         </nav>
 
         <!-- 菜單列表 -->
-        <div id="menuContainer"></div>
+        <div id="menuContainer">
+            <div class="loading-box"><i class="fa-solid fa-spinner fa-spin"></i> 菜單載入中，請稍候...</div>
+        </div>
     </div>
 
     <!-- 浮動購物車條 -->
@@ -476,12 +494,12 @@
             </div>
 
             <div class="option-group">
-                <div class="option-title">加料 (+10元)</div>
+                <div class="option-title">加料 (+10元起)</div>
                 <div class="options-flex" id="toppingOptions">
-                    <div class="option-chip" onclick="toggleTopping(this, '波霸', 10)">波霸</div>
+                    <div class="option-chip" onclick="toggleTopping(this, '波霸', 10)">波霸 (+10)</div>
                     <div class="option-chip" onclick="toggleTopping(this, '手工藍莓凍', 15)">手工藍莓凍 (+15)</div>
-                    <div class="option-chip" onclick="toggleTopping(this, '寒天晶球', 10)">寒天晶球</div>
-                    <div class="option-chip" onclick="toggleTopping(this, '蘆薈果漾', 10)">蘆薈果漾</div>
+                    <div class="option-chip" onclick="toggleTopping(this, '寒天晶球', 10)">寒天晶球 (+10)</div>
+                    <div class="option-chip" onclick="toggleTopping(this, '蘆薈果漾', 10)">蘆薈果漾 (+10)</div>
                     <div class="option-chip" onclick="toggleTopping(this, '統一布丁', 15)">統一布丁 (+15)</div>
                 </div>
             </div>
@@ -572,80 +590,10 @@
     </div>
 
     <script>
-        const menuData = [
-            {
-                id: 'cat-1',
-                title: '🌿 台灣原生茶',
-                items: [
-                    { name: '招牌風鳥茶', price: 35, desc: '風鳥堂獨家配方，甘醇順口回甘' },
-                    { name: '老派紅茶', price: 35, desc: '古早味紅茶香氣，經典不敗' },
-                    { name: '日月潭阿薩姆紅茶', price: 40, desc: '茶香濃郁，帶有獨特麥芽香' },
-                    { name: '鹿谷鮮綠茶', price: 35, desc: '清新綠茶香，口感爽朗' },
-                    { name: '坪林高山烏龍茶', price: 40, desc: '高海拔高山茶，韻味悠長' },
-                    { name: '名間四季春', price: 35, desc: '自然花香氣，順口不苦澀' },
-                    { name: '黃金金萱烏龍', price: 40, desc: '帶有淡淡奶香與高山茶韻' },
-                    { name: '東方美人茶', price: 45, desc: '獨特蜜香與果香，優雅回甘' }
-                ]
-            },
-            {
-                id: 'cat-2',
-                title: '🧋 醇品奶茶',
-                items: [
-                    { name: '招牌風鳥奶茶', price: 50, desc: '招牌茶底調配，香醇完美比例' },
-                    { name: '波霸奶茶', price: 55, desc: 'Q彈大波霸加上濃郁奶茶' },
-                    { name: '文青高山奶烏龍', price: 50, desc: '烏龍茶香與奶香交織，層次豐富' },
-                    { name: '午後的輕奶茶', price: 45, desc: '輕巧無負擔，順口微甜' },
-                    { name: '玫瑰岩鹽奶茶', price: 55, desc: '咸甜交織，玫瑰花香誘人' },
-                    { name: '手工藍莓凍奶茶', price: 60, desc: '滑嫩藍莓凍，酸甜果香奶茶' },
-                    { name: '統一布丁奶茶', price: 60, desc: '整顆布丁加入，甜美滋味' },
-                    { name: '皇家干邑奶茶', price: 60, desc: '奢華香氣，成熟風味奶茶' }
-                ]
-            },
-            {
-                id: 'cat-3',
-                title: '🥛 馥韻鮮奶茶',
-                items: [
-                    { name: '風鳥鮮奶拿鐵', price: 65, desc: '優質鮮奶與招牌風鳥茶完美結合' },
-                    { name: '老派紅鮮奶拿鐵', price: 65, desc: '古早味紅茶搭上濃醇小農鮮奶' },
-                    { name: '阿薩姆鮮奶拿鐵', price: 70, desc: '茶感重，鮮奶香，奶茶控首選' },
-                    { name: '英式伯爵鮮奶拿鐵', price: 70, desc: '佛手柑香氣與鮮奶的完美搭配' },
-                    { name: '東方美人鮮奶拿鐵', price: 75, desc: '蜜香茶韻搭配鮮奶，極致享受' },
-                    { name: '祇園抹茶鮮奶拿鐵', price: 75, desc: '日本日式抹茶粉，濃郁抹香' }
-                ]
-            },
-            {
-                id: 'cat-4',
-                title: '🌟 不老經典特調',
-                items: [
-                    { name: '山草香茅綠', price: 50, desc: '草本香茅香氣，清爽解膩' },
-                    { name: '蜜香凍檸茶', price: 55, desc: '新鮮檸檬切片加純蜂蜜與好茶' },
-                    { name: '冬瓜四季春', price: 45, desc: '遵循古法冬瓜磚加上四季春茶' },
-                    { name: '綠茶多多', price: 55, desc: '兩瓶養樂多搭配清新綠茶' }
-                ]
-            },
-            {
-                id: 'cat-5',
-                title: '😊 穀果茶 (無咖啡因)',
-                items: [
-                    { name: '南非國寶茶', price: 45, desc: '無咖啡因，溫和順口無負擔' },
-                    { name: '綠國寶茶', price: 45, desc: '未發酵國寶茶，清爽營養高' },
-                    { name: '洋甘菊綠國寶茶', price: 50, desc: '舒緩洋甘菊香氣，放鬆首選' },
-                    { name: '黃金蕎麥茶', price: 45, desc: '烘焙蕎麥香，無咖啡因可溫飲' },
-                    { name: '梅子山楂洛神', price: 50, desc: '酸甜開胃，自然紅潤好氣色' },
-                    { name: '百香雙果漾', price: 60, desc: '豐富百香果粒與豐富口感' }
-                ]
-            },
-            {
-                id: 'cat-6',
-                title: '❄️ 酷冰尼 / 冰尼茶',
-                items: [
-                    { name: '可可拿鐵酷冰尼', price: 75, desc: '濃郁巧克力冰沙與鮮奶層次' },
-                    { name: '爆珠四季冰尼茶', price: 70, desc: '水果爆珠咬下噴汁，冰爽暢快' },
-                    { name: '玫瑰果紅莓酷冰尼', price: 75, desc: '酸甜莓果冰沙，夏日熱門' }
-                ]
-            }
-        ];
+        const SPREADSHEET_ID = '1_5ynzti6fA6RUq5UUjB28oxw2u2eFMs4RiGRzUmKvQU';
+        const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
 
+        let menuData = [];
         let cart = [];
         let currentItem = null;
         let selectedSweetness = '正常糖';
@@ -653,6 +601,73 @@
         let selectedToppings = [];
         let orderType = '外帶';
         let selectedPayMethod = 'LINE Pay';
+
+        async function fetchMenuFromSheet() {
+            try {
+                const response = await fetch(SHEET_URL);
+                const text = await response.text();
+                const jsonStr = text.substring(47, text.length - 2);
+                const json = JSON.parse(jsonStr);
+
+                const rows = json.table.rows;
+                const categoriesMap = {};
+
+                rows.forEach(row => {
+                    const c = row.c;
+                    if (!c || !c[0] || !c[1] || !c[2] || !c[3]) return;
+
+                    const catId = c[0] ? c[0].v : '';
+                    const catTitle = c[1] ? c[1].v : '';
+                    const name = c[2] ? c[2].v : '';
+                    const price = c[3] ? Number(c[3].v) : 0;
+                    const desc = c[4] ? c[4].v : '';
+                    const status = c[5] ? c[5].v : '上架';
+
+                    if (status === '下架') return;
+
+                    if (!categoriesMap[catId]) {
+                        categoriesMap[catId] = {
+                            id: catId,
+                            title: catTitle,
+                            items: []
+                        };
+                    }
+
+                    categoriesMap[catId].items.push({ name, price, desc, status });
+                });
+
+                menuData = Object.values(categoriesMap);
+                renderMenuNav();
+                renderMenu();
+            } catch (err) {
+                console.error("讀取試算表失敗，使用預設菜單", err);
+                loadDefaultMenu();
+            }
+        }
+
+        function loadDefaultMenu() {
+            menuData = [
+                {
+                    id: 'cat-1',
+                    title: '🌿 台灣原生茶',
+                    items: [
+                        { name: '招牌風鳥茶', price: 35, desc: '風鳥堂獨家配方，甘醇順口回甘', status: '上架' },
+                        { name: '老派紅茶', price: 35, desc: '古早味紅茶香氣，經典不敗', status: '上架' }
+                    ]
+                }
+            ];
+            renderMenuNav();
+            renderMenu();
+        }
+
+        function renderMenuNav() {
+            const nav = document.getElementById('categoryNav');
+            let navHtml = `<button class="category-btn active" onclick="scrollToCategory('all')">全部商品</button>`;
+            menuData.forEach(cat => {
+                navHtml += `<button class="category-btn" onclick="scrollToCategory('${cat.id}')">${cat.title}</button>`;
+            });
+            nav.innerHTML = navHtml;
+        }
 
         function renderMenu() {
             const container = document.getElementById('menuContainer');
@@ -662,16 +677,19 @@
                 const section = document.createElement('section');
                 section.id = cat.id;
                 
-                let itemsHtml = cat.items.map(item => `
-                    <div class="menu-card" onclick="openItemModal('${item.name}', ${item.price})">
-                        <div class="item-info">
-                            <div class="item-name">${item.name}</div>
-                            <div class="item-desc">${item.desc}</div>
-                            <div class="item-price">$${item.price}</div>
+                let itemsHtml = cat.items.map(item => {
+                    const isSoldOut = item.status === '售完';
+                    return `
+                        <div class="menu-card ${isSoldOut ? 'sold-out' : ''}" onclick="${isSoldOut ? '' : `openItemModal('${item.name}',${item.price})`}">
+                            <div class="item-info">
+                                <div class="item-name">${item.name} ${isSoldOut ? '<span class="sold-badge">已售完</span>' : ''}</div>
+                                <div class="item-desc">${item.desc}</div>
+                                <div class="item-price">$${item.price}</div>
+                            </div>
+                            <button class="add-btn">${isSoldOut ? '<i class="fa-solid fa-ban"></i>' : '<i class="fa-solid fa-plus"></i>'}</button>
                         </div>
-                        <button class="add-btn"><i class="fa-solid fa-plus"></i></button>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
 
                 section.innerHTML = `
                     <div class="section-title">${cat.title}</div>
@@ -899,7 +917,7 @@
             window.location.href = `https://line.me/R/oaMessage/@694hwlae/?${encodedMessage}`;
         }
 
-        renderMenu();
+        fetchMenuFromSheet();
     </script>
 </body>
 </html>
