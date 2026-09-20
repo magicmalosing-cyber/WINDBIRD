@@ -882,9 +882,24 @@
             orderSummary += `金額總計：$${total} 元\n`;
             if (note) orderSummary += `備註：${note}\n`;
 
+            // 自動複製到剪貼簿，確保萬一 LINE 被阻擋時顧客可手動貼上
+            navigator.clipboard.writeText(orderSummary).then(() => {
+                console.log('訂單內容已複製到剪貼簿');
+            }).catch(err => {
+                console.log('複製失敗', err);
+            });
+
             const encodedMessage = encodeURIComponent(orderSummary);
-            // 透過官方帳號 @694ptdsi 自動開啟 LINE 並帶入訊息
-            window.location.href = `https://line.me/R/oaMessage/@694ptdsi/?${encodedMessage}`;
+            
+            // 使用雙重防護導向 LINE 官方帳號 (@694ptdsi)
+            const lineUniversalUrl = `https://line.me/R/oaMessage/@694ptdsi/?${encodedMessage}`;
+            
+            window.location.href = lineUniversalUrl;
+            
+            // 彈出提示告知使用者，若沒自動跳出可手動貼上
+            setTimeout(() => {
+                alert('訂單明細已自動複製！\n如果跳轉 LINE 後沒有自動帶入，請直接在對話框「長按貼上」即可傳送！');
+            }, 500);
         }
 
         fetchMenuFromSheet();
