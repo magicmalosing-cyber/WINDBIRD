@@ -59,7 +59,7 @@
             padding: 1rem;
         }
 
-        /* 營業時間休息提示遮罩 */
+        /* 營業時間 / 手動關閉提示遮罩 */
         .closed-overlay {
             background: #fee2e2;
             color: #991b1b;
@@ -466,9 +466,9 @@
     </header>
 
     <div class="container">
-        <!-- 營業時間提示 -->
+        <!-- 營業時間 / 手動關閉提示 -->
         <div class="closed-overlay" id="closedOverlay">
-            <i class="fa-solid fa-store-slash"></i> 目前為非營業時間（營業時間為 11:00 ~ 22:00），暫不開放線上點餐！
+            <i class="fa-solid fa-store-slash"></i> <span id="closedMsg">目前為非營業時間（營業時間為 11:00 ~ 22:00），暫不開放線上點餐！</span>
         </div>
 
         <!-- 分類導航欄 -->
@@ -537,9 +537,7 @@
 
             <div class="option-group">
                 <div class="option-title">加料區</div>
-                <div class="options-flex" id="toppingOptions">
-                    <!-- 動態由 JavaScript 生成 -->
-                </div>
+                <div class="options-flex" id="toppingOptions"></div>
             </div>
 
             <div class="modal-qty-row">
@@ -623,7 +621,6 @@
 
     <script>
         const SPREADSHEET_ID = '1_5ynzti6fA6RUq5UUjB28oxw2u2eFMs4RiGRzUmKvQU';
-        // 同時獲取主選單與加料頁面 (gid=1381768995)
         const MENU_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
         const TOPPING_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&gid=1381768995`;
 
@@ -640,20 +637,34 @@
         let selectedToppings = [];
         let modalQty = 1;
         let selectedPayMethod = 'LINE Pay';
+        
         let isStoreOpen = true;
+        let isManualClosed = false; // 手動關閉標記
 
         function checkBusinessHours() {
+            if (isManualClosed) return; // 如果已被手動關閉，不重複處理
+
             const now = new Date();
             const currentTimeVal = now.getHours() * 60 + now.getMinutes();
             if (currentTimeVal < 11 * 60 || currentTimeVal > 22 * 60) {
                 isStoreOpen = false;
+                document.getElementById('closedMsg').innerText = '目前為非營業時間（營業時間為 11:00 ~ 22:00），暫不開放線上點餐！';
                 document.getElementById('closedOverlay').style.display = 'block';
                 document.getElementById('cartBar').style.opacity = '0.5';
             } else {
                 isStoreOpen = true;
                 document.getElementById('closedOverlay').style.display = 'none';
+                document.getElementById('cartBar').style.opacity = '1';
             }
             generatePickupTimeOptions();
+        }
+
+        function setManualClosed(reasonMsg) {
+            isStoreOpen = false;
+            isManualClosed = true;
+            document.getElementById('closedMsg').innerText = reasonMsg || '本店目前暫停線上點餐服務，造成不便敬請見諒！';
+            document.getElementById('closedOverlay').style.display = 'block';
+            document.getElementById('cartBar').style.opacity = '0.5';
         }
 
         function generatePickupTimeOptions() {
@@ -688,13 +699,11 @@
 
         async function fetchMenuFromSheet() {
             try {
-                // 讀取主菜單與加料分頁
                 const [menuRes, toppingRes] = await Promise.all([
                     fetch(MENU_SHEET_URL).then(r => r.text()),
                     fetch(TOPPING_SHEET_URL).then(r => r.text()).catch(() => null)
                 ]);
 
-                // 1. 解析主菜單
                 const menuJsonStr = menuRes.substring(47, menuRes.length - 2);
                 const menuJson = JSON.parse(menuJsonStr);
                 const categoriesMap = {};
@@ -711,6 +720,14 @@
                     const desc = c[4] ? String(c[4].v || '') : '';
                     const status = c[5] ? String(c[5].v || '上架') : '上架';
 
+                    // 檢查是否為手動關閉平台的設定
+                    if (catId === 'system' || rawName.includes('平台開關')) {
+                        if (status === '暫停營業' || status === '關閉' || status === '下架') {
+                            setManualClosed(desc);
+                        }
+                        return;
+                    }
+
                     if (status === '下架' || !rawName) return;
 
                     if (catId === 'cat-topping' || catTitle.includes('加料')) {
@@ -724,7 +741,6 @@
                     categoriesMap[catId].items.push({ name: rawName, price, desc, status });
                 });
 
-                // 2. 如果獨立加料頁面有資料，進一步補充解析
                 if (toppingRes) {
                     try {
                         const topJsonStr = toppingRes.substring(47, toppingRes.length - 2);
@@ -741,7 +757,7 @@
                             }
                         });
                     } catch (e) {
-                        console.warn("解析獨立加料頁失敗，使用預設讀取", e);
+                        console.warn("解析獨立加料頁失敗", e);
                     }
                 }
 
@@ -755,7 +771,6 @@
         }
 
         function parseAndAddToppings(rawName, price, status) {
-            // 切分多品項（如：波霸 / 椰果 / 寒天）
             const items = rawName.split(/[/、,]/);
             items.forEach(item => {
                 const name = item.trim();
@@ -862,7 +877,7 @@
 
         function openItemModal(name, price) {
             if (!isStoreOpen) {
-                alert('目前為非營業時間，無法點餐喔！');
+                alert('目前暫不開放線上點餐喔！');
                 return;
             }
 
@@ -880,7 +895,6 @@
             resetChipSelection('sweetnessOptions', 0);
             resetChipSelection('iceOptions', 0);
 
-            // 動態渲染加料區並重置狀態
             renderToppingsModal();
 
             document.getElementById('itemModal').classList.add('active');
@@ -957,7 +971,7 @@
 
         function openCartModal() {
             if (!isStoreOpen) {
-                alert('目前為非營業時間，無法點餐喔！');
+                alert('目前暫不開放線上點餐喔！');
                 return;
             }
             if (cart.length === 0) {
