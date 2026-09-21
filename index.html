@@ -59,6 +59,7 @@
             padding: 1rem;
         }
 
+        /* 營業時間休息提示遮罩 */
         .closed-overlay {
             background: #fee2e2;
             color: #991b1b;
@@ -205,6 +206,7 @@
             font-weight: bold;
         }
 
+        /* Modal Base */
         .modal-backdrop {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -295,6 +297,7 @@
             border-color: var(--primary);
         }
 
+        /* Modal 內數量調整區塊 */
         .modal-qty-row {
             display: flex;
             justify-content: space-between;
@@ -306,6 +309,7 @@
             border: 1px solid var(--border-color);
         }
 
+        /* Cart Bar Floating */
         .cart-bar {
             position: fixed;
             bottom: 1rem;
@@ -409,6 +413,7 @@
             background: white;
         }
 
+        /* Payment QR Area */
         .qr-box {
             text-align: center;
             background: #f1f5f9;
@@ -460,23 +465,27 @@
 
     <header>
         <div class="header-title">風鳥堂林口中山店</div>
-        <div class="header-subtitle">官方 LINE ID: @694hwlae ‧ 營業時間 10:30 ~ 23:00</div>
+        <div class="header-subtitle">官方 LINE ID: @694hwlae ‧ 營業時間 11:00 ~ 22:00</div>
     </header>
 
     <div class="container">
+        <!-- 營業時間提示 -->
         <div class="closed-overlay" id="closedOverlay">
-            <i class="fa-solid fa-store-slash"></i> 目前為非營業時間（營業時間為 10:30 ~ 23:00），暫不開放線上點餐！
+            <i class="fa-solid fa-store-slash"></i> 目前為非營業時間（營業時間為 11:00 ~ 22:00），暫不開放線上點餐！
         </div>
 
+        <!-- 分類導航欄 -->
         <nav class="category-nav" id="categoryNav">
             <button class="category-btn active" onclick="scrollToCategory('all')">載入中...</button>
         </nav>
 
+        <!-- 菜單列表 -->
         <div id="menuContainer">
             <div class="loading-box"><i class="fa-solid fa-spinner fa-spin"></i> 菜單載入中，請稍候...</div>
         </div>
     </div>
 
+    <!-- 浮動購物車條 -->
     <div class="cart-bar" id="cartBar" onclick="openCartModal()">
         <div class="cart-summary">
             <i class="fa-solid fa-shopping-bag"></i>
@@ -532,10 +541,11 @@
             <div class="option-group">
                 <div class="option-title">加料區</div>
                 <div class="options-flex" id="toppingOptions">
-                    <!-- 由 JavaScript 自動連動試算表產生 -->
+                    <!-- 動態由 JavaScript 生成 -->
                 </div>
             </div>
 
+            <!-- Modal 內數量調整區塊 -->
             <div class="modal-qty-row">
                 <span style="font-weight: 700; font-size: 0.9rem;">數量</span>
                 <div class="qty-controls">
@@ -562,6 +572,7 @@
             <div style="border-top: 2px solid var(--border-color); padding-top: 1rem; margin-top: 1rem;">
                 <label style="font-size: 0.85rem; font-weight: bold;">預計取餐時間</label>
                 <select id="custPickupTime" class="form-select">
+                    <!-- 動態帶入 -->
                 </select>
 
                 <label style="font-size: 0.85rem; font-weight: bold;">訂購人姓名</label>
@@ -619,11 +630,14 @@
     <script>
         const SPREADSHEET_ID = '1_5ynzti6fA6RUq5UUjB28oxw2u2eFMs4RiGRzUmKvQU';
         const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
+        
         const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxpuB_w20nq4ZtldzABmuVqu-iUUgDFW1nBQpuFP2j_8Yj2cv7qla-atfDfCWDFxxb5RA/exec';
+        
+        // 官方 LINE ID (不含 @)
         const LINE_OFFICIAL_ID = '694hwlae';
 
         let menuData = [];
-        let toppingData = []; // 儲存動態加料區
+        let toppingData = []; // 動態儲存試算表讀取到的加料選項
         let cart = [];
         let currentItem = null;
         let selectedSweetness = '多糖';
@@ -634,15 +648,15 @@
         let selectedPayMethod = 'LINE Pay';
         let isStoreOpen = true;
 
-        // 檢查營業時間 (10:30 ~ 23:00)
+        // 檢查營業時間 (11:00 ~ 22:00)
         function checkBusinessHours() {
             const now = new Date();
             const hours = now.getHours();
             const minutes = now.getMinutes();
             const currentTimeVal = hours * 60 + minutes;
 
-            const openTimeVal = 10 * 60 + 30; // 10:30
-            const closeTimeVal = 23 * 60;     // 23:00
+            const openTimeVal = 11 * 60; // 11:00
+            const closeTimeVal = 22 * 60; // 22:00
 
             if (currentTimeVal < openTimeVal || currentTimeVal > closeTimeVal) {
                 isStoreOpen = false;
@@ -655,6 +669,7 @@
             generatePickupTimeOptions();
         }
 
+        // 產生 30 分鐘為間隔、涵蓋營業時間 (11:00 ~ 22:00)，且過濾掉已經過去的時間
         function generatePickupTimeOptions() {
             const select = document.getElementById('custPickupTime');
             select.innerHTML = '';
@@ -662,8 +677,8 @@
             const now = new Date();
             const currentTotalMins = now.getHours() * 60 + now.getMinutes();
 
-            const openLimit = 10 * 60 + 30; // 10:30
-            const closeLimit = 23 * 60;     // 23:00
+            const openLimit = 11 * 60;  // 11:00
+            const closeLimit = 22 * 60; // 22:00
             let currentMinutes = openLimit;
 
             while (currentMinutes <= closeLimit) {
@@ -681,7 +696,7 @@
                 option.innerText = `${timeStr} 取餐`;
                 select.appendChild(option);
 
-                currentMinutes += 30;
+                currentMinutes += 30; // 30 分鐘為間隔
             }
 
             if (select.options.length === 0) {
@@ -692,87 +707,81 @@
             }
         }
 
-        // 從 Google 試算表同步讀取飲料與加料區
-async function fetchMenuFromSheet() {
-    try {
-        const response = await fetch(SHEET_URL);
-        const text = await response.text();
-        const jsonStr = text.substring(47, text.length - 2);
-        const json = JSON.parse(jsonStr);
+        async function fetchMenuFromSheet() {
+            try {
+                const response = await fetch(SHEET_URL);
+                const text = await response.text();
+                const jsonStr = text.substring(47, text.length - 2);
+                const json = JSON.parse(jsonStr);
 
-        const rows = json.table.rows;
-        const categoriesMap = {};
-        toppingData = []; // 重置加料區資料
+                const rows = json.table.rows;
+                const categoriesMap = {};
+                toppingData = []; // 重置加料區資料
 
-        rows.forEach(row => {
-            const c = row.c;
-            if (!c || !c[0] || !c[1] || !c[2]) return;
+                rows.forEach(row => {
+                    const c = row.c;
+                    if (!c || !c[0] || !c[1] || !c[2]) return;
 
-            const catId = c[0] ? String(c[0].v) : '';
-            const catTitle = c[1] ? String(c[1].v) : '';
-            const rawName = c[2] ? String(c[2].v) : '';
-            const price = c[3] ? Number(c[3].v) : 0;
-            const desc = c[4] ? String(c[4].v) : '';
-            const status = c[5] ? String(c[5].v) : '上架';
+                    const catId = c[0] ? String(c[0].v) : '';
+                    const catTitle = c[1] ? String(c[1].v) : '';
+                    const rawName = c[2] ? String(c[2].v) : '';
+                    const price = c[3] ? Number(c[3].v) : 0;
+                    const desc = c[4] ? String(c[4].v) : '';
+                    const status = c[5] ? String(c[5].v) : '上架';
 
-            // 1. 如果狀態為「下架」，直接跳過
-            if (status === '下架') return;
+                    if (status === '下架') return;
 
-            // 2. 處理「加料區」(cat-topping)
-            if (catId === 'cat-topping' || catTitle.includes('加料')) {
-                // 若 C 欄含有多個配料（例如："波霸 / 椰果 / 寒天"），自動切開成獨立品項
-                if (rawName.includes('/') || rawName.includes('、')) {
-                    const items = rawName.split(/[/、]/);
-                    items.forEach(item => {
-                        const cleanName = item.trim();
-                        if (cleanName) {
-                            toppingData.push({ name: cleanName, price: price, status: status });
+                    // 處理加料區
+                    if (catId === 'cat-topping' || catTitle.includes('加料')) {
+                        if (rawName.includes('/') || rawName.includes('、')) {
+                            const items = rawName.split(/[/、]/);
+                            items.forEach(item => {
+                                const cleanName = item.trim();
+                                if (cleanName) {
+                                    toppingData.push({ name: cleanName, price: price, status: status });
+                                }
+                            });
+                        } else if (!rawName.includes('加料區')) {
+                            toppingData.push({ name: rawName, price: price, status: status });
                         }
-                    });
-                } else if (!rawName.includes('加料區')) { 
-                    // 單一品項且非標題列
-                    toppingData.push({ name: rawName, price: price, status: status });
+                        return;
+                    }
+
+                    // 一般飲品分類
+                    if (!categoriesMap[catId]) {
+                        categoriesMap[catId] = { id: catId, title: catTitle, items: [] };
+                    }
+                    categoriesMap[catId].items.push({ name: rawName, price, desc, status });
+                });
+
+                menuData = Object.values(categoriesMap);
+                renderMenuNav();
+                renderMenu();
+            } catch (err) {
+                console.error("讀取試算表失敗，使用預設菜單", err);
+                loadDefaultMenu();
+            }
+        }
+
+        function loadDefaultMenu() {
+            menuData = [
+                {
+                    id: 'cat-1',
+                    title: '🌿 台灣原生茶',
+                    items: [
+                        { name: '招牌風鳥茶', price: 35, desc: '風鳥堂獨家配方，甘醇順口回甘', status: '上架' },
+                        { name: '老派紅茶', price: 35, desc: '古早味紅茶香氣，經典不敗', status: '上架' }
+                    ]
                 }
-                return;
-            }
-
-            // 3. 一般飲品分類
-            if (!categoriesMap[catId]) {
-                categoriesMap[catId] = { id: catId, title: catTitle, items: [] };
-            }
-            categoriesMap[catId].items.push({ name: rawName, price, desc, status });
-        });
-
-        menuData = Object.values(categoriesMap);
-        renderMenuNav();
-        renderMenu();
-        renderToppingsModal();
-    } catch (err) {
-        console.error("讀取試算表失敗", err);
-    }
-}
-
-        // 動態渲染加料區按鈕
-        function renderToppingsModal() {
-            const toppingContainer = document.getElementById('toppingOptions');
-            if (!toppingContainer) return;
-
-            if (toppingData.length === 0) {
-                toppingContainer.innerHTML = '<div style="font-size:0.8rem; color:#94a3b8;">無可選加料</div>';
-                return;
-            }
-
-            let html = '';
-            toppingData.forEach(t => {
-                const isSoldOut = (t.status === '售完');
-                if (isSoldOut) {
-                    html += `<div class="option-chip" style="opacity: 0.4; cursor: not-allowed; background: #e2e8f0; text-decoration: line-through;">${t.name} (已售完)</div>`;
-                } else {
-                    html += `<div class="option-chip" onclick="toggleTopping(this, '${t.name}', ${t.price})">${t.name} (+${t.price})</div>`;
-                }
-            });
-
-            toppingContainer.innerHTML = html;
+            ];
+            toppingData = [
+                { name: '波霸珍珠', price: 10, status: '上架' },
+                { name: '椰果', price: 5, status: '上架' },
+                { name: '手工藍莓凍', price: 15, status: '上架' },
+                { name: '寒天晶球', price: 10, status: '上架' }
+            ];
+            renderMenuNav();
+            renderMenu();
         }
 
         function renderMenuNav() {
@@ -815,6 +824,27 @@ async function fetchMenuFromSheet() {
             });
         }
 
+        function renderToppingsModal() {
+            const container = document.getElementById('toppingOptions');
+            if (!container) return;
+
+            if (toppingData.length === 0) {
+                container.innerHTML = `<span style="font-size: 0.85rem; color: var(--text-muted);">無提供加料</span>`;
+                return;
+            }
+
+            let html = '';
+            toppingData.forEach(t => {
+                const isSoldOut = t.status === '售完';
+                if (isSoldOut) {
+                    html += `<div class="option-chip" style="opacity:0.5; cursor:not-allowed;">${t.name} (已售完)</div>`;
+                } else {
+                    html += `<div class="option-chip" onclick="toggleTopping(this, '${t.name}', ${t.price})">${t.name} (+${t.price})</div>`;
+                }
+            });
+            container.innerHTML = html;
+        }
+
         function scrollToCategory(id) {
             if (id === 'all') {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -847,8 +877,8 @@ async function fetchMenuFromSheet() {
 
             resetChipSelection('sweetnessOptions', 0);
             resetChipSelection('iceOptions', 0);
-            
-            // 重新讀取最新的加料選單狀態
+
+            // 動態渲染加料區並重置選擇狀態
             renderToppingsModal();
 
             document.getElementById('itemModal').classList.add('active');
@@ -1034,6 +1064,7 @@ async function fetchMenuFromSheet() {
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 正在處理中...`;
 
             try {
+                // 1. 背景同步寫入 Google 試算表 & 推播給店家
                 await fetch(GAS_WEB_APP_URL, {
                     method: 'POST',
                     mode: 'no-cors',
@@ -1041,6 +1072,7 @@ async function fetchMenuFromSheet() {
                     body: JSON.stringify(orderData)
                 });
 
+                // 2. 組合 LINE 聊天室文字
                 let itemsDetail = '';
                 cart.forEach(item => {
                     let toppingsText = item.toppings.length > 0 ? ` + ${item.toppings.map(t=>t.name).join(', ')}` : '';
@@ -1058,15 +1090,18 @@ async function fetchMenuFromSheet() {
                                 `------------------------------\n` +
                                 `💰 總金額：$${total} 元`;
 
+                // 3. 打開 LINE 聊天室並自動帶入文字 (若是新朋友也會自動彈出加好友)
                 const encodedMsg = encodeURIComponent(lineMsg);
                 const lineUrl = `https://line.me/R/oaMessage/@${LINE_OFFICIAL_ID}/?${encodedMsg}`;
 
                 alert('訂單資料已記錄！即將為您跳轉至 LINE，請在對話框點擊「發送」送出點餐單！');
                 
+                // 清空購物車
                 cart = [];
                 updateCart();
                 closeModal('payModal');
 
+                // 開啟 LINE
                 window.location.href = lineUrl;
 
             } catch (error) {
@@ -1078,6 +1113,7 @@ async function fetchMenuFromSheet() {
             }
         }
 
+        // 初始化執行
         checkBusinessHours();
         fetchMenuFromSheet();
     </script>
