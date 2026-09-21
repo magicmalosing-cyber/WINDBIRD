@@ -297,6 +297,18 @@
             border-color: var(--primary);
         }
 
+        /* Modal 內數量調整區塊 */
+        .modal-qty-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8fafc;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.25rem;
+            border: 1px solid var(--border-color);
+        }
+
         /* Cart Bar Floating */
         .cart-bar {
             position: fixed;
@@ -542,6 +554,16 @@
                 </div>
             </div>
 
+            <!-- 新增：Modal 內數量調整區塊 -->
+            <div class="modal-qty-row">
+                <span style="font-weight: 700; font-size: 0.9rem;">數量</span>
+                <div class="qty-controls">
+                    <button class="qty-btn" onclick="changeModalQty(-1)">-</button>
+                    <span id="modalItemQty" style="font-weight: bold; width: 24px; text-align: center;">1</span>
+                    <button class="qty-btn" onclick="changeModalQty(1)">+</button>
+                </div>
+            </div>
+
             <button class="btn-primary" style="background-color: var(--primary);" onclick="confirmAddToCart()">加入購物車</button>
         </div>
     </div>
@@ -626,6 +648,7 @@
         let sweetnessPrice = 0;
         let selectedIce = '多冰';
         let selectedToppings = [];
+        let modalQty = 1; // 記錄 Modal 內的數量
         let selectedPayMethod = 'LINE Pay';
         let isStoreOpen = true;
 
@@ -656,20 +679,17 @@
             select.innerHTML = '';
 
             const now = new Date();
-            // 從現在起算 15 分鐘後
             let targetTime = new Date(now.getTime() + 15 * 60000);
 
             let currentMinutes = targetTime.getHours() * 60 + targetTime.getMinutes();
             const openLimit = 11 * 60;
             const closeLimit = 22 * 60;
 
-            // 如果還沒到營業開始時間，從 11:15 開始起算
             if (currentMinutes < openLimit) {
                 currentMinutes = openLimit + 15;
             }
 
             let count = 0;
-            // 最多往後產生 12 個選項（3小時內）
             while (currentMinutes <= closeLimit && count < 12) {
                 const h = Math.floor(currentMinutes / 60);
                 const m = currentMinutes % 60;
@@ -809,9 +829,11 @@
             sweetnessPrice = 0;
             selectedIce = '多冰';
             selectedToppings = [];
+            modalQty = 1; // 每次開啟重設為 1
 
             document.getElementById('modalItemName').innerText = name;
             document.getElementById('modalItemPrice').innerText = `$${price}`;
+            document.getElementById('modalItemQty').innerText = modalQty;
 
             resetChipSelection('sweetnessOptions', 0);
             resetChipSelection('iceOptions', 0);
@@ -851,6 +873,13 @@
             }
         }
 
+        // Modal 內數量增減控制
+        function changeModalQty(delta) {
+            modalQty += delta;
+            if (modalQty < 1) modalQty = 1;
+            document.getElementById('modalItemQty').innerText = modalQty;
+        }
+
         function closeModal(modalId) {
             document.getElementById(modalId).classList.remove('active');
         }
@@ -867,7 +896,7 @@
                 sweetness: selectedSweetness,
                 ice: selectedIce,
                 toppings: [...selectedToppings],
-                qty: 1
+                qty: modalQty // 使用 Modal 內調整好的數量
             };
 
             cart.push(cartItem);
