@@ -749,7 +749,8 @@
             const nav = document.getElementById('categoryNav');
             let navHtml = `<button class="category-btn active" onclick="scrollToCategory('all')">全部商品</button>`;
             menuData.forEach(cat => {
-                navHtml += `<button class="category-btn" onclick="scrollToCategory('${cat.id}')">${cat.title}</button>`;
+                let shortTitle = cat.title.split('（')[0].split('(')[0].trim();
+                navHtml += `<button class="category-btn" onclick="scrollToCategory('${cat.id}')">${shortTitle}</button>`;
             });
             nav.innerHTML = navHtml;
         }
