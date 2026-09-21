@@ -693,52 +693,64 @@
         }
 
         // 從 Google 試算表同步讀取飲料與加料區
-        async function fetchMenuFromSheet() {
-            try {
-                const response = await fetch(SHEET_URL);
-                const text = await response.text();
-                const jsonStr = text.substring(47, text.length - 2);
-                const json = JSON.parse(jsonStr);
+async function fetchMenuFromSheet() {
+    try {
+        const response = await fetch(SHEET_URL);
+        const text = await response.text();
+        const jsonStr = text.substring(47, text.length - 2);
+        const json = JSON.parse(jsonStr);
 
-                const rows = json.table.rows;
-                const categoriesMap = {};
-                toppingData = []; // 重置加料區資料
+        const rows = json.table.rows;
+        const categoriesMap = {};
+        toppingData = []; // 重置加料區資料
 
-                rows.forEach(row => {
-                    const c = row.c;
-                    if (!c || !c[0] || !c[1] || !c[2] || !c[3]) return;
+        rows.forEach(row => {
+            const c = row.c;
+            if (!c || !c[0] || !c[1] || !c[2]) return;
 
-                    const catId = c[0] ? String(c[0].v) : '';
-                    const catTitle = c[1] ? String(c[1].v) : '';
-                    const name = c[2] ? String(c[2].v) : '';
-                    const price = c[3] ? Number(c[3].v) : 0;
-                    const desc = c[4] ? String(c[4].v) : '';
-                    const status = c[5] ? String(c[5].v) : '上架';
+            const catId = c[0] ? String(c[0].v) : '';
+            const catTitle = c[1] ? String(c[1].v) : '';
+            const rawName = c[2] ? String(c[2].v) : '';
+            const price = c[3] ? Number(c[3].v) : 0;
+            const desc = c[4] ? String(c[4].v) : '';
+            const status = c[5] ? String(c[5].v) : '上架';
 
-                    // 如果狀態為「下架」，直接跳過不安裝
-                    if (status === '下架') return;
+            // 1. 如果狀態為「下架」，直接跳過
+            if (status === '下架') return;
 
-                    // 判斷是否為「加料區」（分類名稱有“加料”字眼或 catId 包含 topping）
-                    if (catTitle.includes('加料') || catId.toLowerCase().includes('topping')) {
-                        toppingData.push({ name, price, status });
-                        return;
-                    }
-
-                    // 一般飲品
-                    if (!categoriesMap[catId]) {
-                        categoriesMap[catId] = { id: catId, title: catTitle, items: [] };
-                    }
-                    categoriesMap[catId].items.push({ name, price, desc, status });
-                });
-
-                menuData = Object.values(categoriesMap);
-                renderMenuNav();
-                renderMenu();
-                renderToppingsModal();
-            } catch (err) {
-                console.error("讀取試算表失敗", err);
+            // 2. 處理「加料區」(cat-topping)
+            if (catId === 'cat-topping' || catTitle.includes('加料')) {
+                // 若 C 欄含有多個配料（例如："波霸 / 椰果 / 寒天"），自動切開成獨立品項
+                if (rawName.includes('/') || rawName.includes('、')) {
+                    const items = rawName.split(/[/、]/);
+                    items.forEach(item => {
+                        const cleanName = item.trim();
+                        if (cleanName) {
+                            toppingData.push({ name: cleanName, price: price, status: status });
+                        }
+                    });
+                } else if (!rawName.includes('加料區')) { 
+                    // 單一品項且非標題列
+                    toppingData.push({ name: rawName, price: price, status: status });
+                }
+                return;
             }
-        }
+
+            // 3. 一般飲品分類
+            if (!categoriesMap[catId]) {
+                categoriesMap[catId] = { id: catId, title: catTitle, items: [] };
+            }
+            categoriesMap[catId].items.push({ name: rawName, price, desc, status });
+        });
+
+        menuData = Object.values(categoriesMap);
+        renderMenuNav();
+        renderMenu();
+        renderToppingsModal();
+    } catch (err) {
+        console.error("讀取試算表失敗", err);
+    }
+}
 
         // 動態渲染加料區按鈕
         function renderToppingsModal() {
