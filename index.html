@@ -1,3 +1,13 @@
+<!-- 
+===================================================
+ 風鳥堂 - LINE Messaging API 設定資訊備忘
+===================================================
+ User ID: U36aa1eb3ce3d351f36619f5b581b2c63
+ Channel Access Token: Fm9uIWpOObrKw5iP0CDgceEyd7xiN1rybNS84qsw/pOloAvmGapA0raVpHL6O02UJadGvwfYEEg84Ms1PGupjOoG3O548pCmdm/ERBtssOj6RegewCdOzSD4ccNefTryI8SMKaxgO8PjP5jdwzd1YAdB04t89/1O/w1cDnyilFU=
+ Channel Secret: 5889de66d1846cacaad7ce51602e1a02
+ Official LINE ID: @694hwlae
+===================================================
+-->
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -465,7 +475,7 @@
 
     <header>
         <div class="header-title">風鳥堂</div>
-        <div class="header-subtitle">官方 LINE ID: @407xerem ‧ 營業時間 11:00 ~ 22:00</div>
+        <div class="header-subtitle">官方 LINE ID: @694hwlae ‧ 營業時間 11:00 ~ 22:00</div>
     </header>
 
     <div class="container">
@@ -686,7 +696,6 @@
             let currentMinutes = openLimit;
 
             while (currentMinutes <= closeLimit) {
-                // 如果當前時間已經大於或等於這個選項的時間點，就略過不加入（不讓使用者選過去的時間）
                 if (isStoreOpen && currentTotalMins >= currentMinutes) {
                     currentMinutes += 30;
                     continue;
@@ -701,7 +710,7 @@
                 option.innerText = `${timeStr} 取餐`;
                 select.appendChild(option);
 
-                currentMinutes += 30; // 30 分鐘為間隔
+                currentMinutes += 30;
             }
 
             if (select.options.length === 0) {
