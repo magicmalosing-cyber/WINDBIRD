@@ -689,7 +689,7 @@
             }
         }
 
-        async function fetchAllData() {
+async function fetchAllData() {
             try {
                 // 同時讀取主選單與加料分頁
                 const [menuRes, toppingsRes] = await Promise.all([
@@ -723,7 +723,7 @@
                 });
                 menuData = Object.values(categoriesMap);
 
-                // 解析加料清單 (Toppings)
+                // 解析加料清單 (Toppings) - 嚴格過濾格式，避免抓到其他欄位或時間
                 try {
                     const toppingsText = await toppingsRes.text();
                     const toppingsJson = JSON.parse(toppingsText.substring(47, toppingsText.length - 2));
@@ -732,15 +732,28 @@
                     toppingsData = [];
                     toppingRows.forEach(row => {
                         const c = row.c;
-                        if (!c || !c[0]) return;
-                        const name = c[0] ? c[0].v : '';
-                        const price = c[1] ? Number(c[1].v) : 0;
-                        const status = c[2] ? c[2].v : '上架';
+                        // 確保至少第一欄有資料
+                        if (!c || !c[0] || c[0].v === null) return;
+                        
+                        let name = String(c[0].v).trim();
+                        let price = (c[1] && c[1].v !== null && !isNaN(c[1].v)) ? Number(c[1].v) : 0;
+                        let status = c[2] ? String(c[2].v) : '上架';
 
-                        if (status !== '下架') {
-                            toppingsData.push({ name, price, status });
+                        // 嚴格排除：分類編號(cat-)、日期時間、空值、或是非文字內容
+                        const isCatId = name.startsWith('cat-') || name.startsWith('CAT-');
+                        const isDateTime = name.includes('2026/') || name.includes('下午') || name.includes('上午');
+                        
+                        if (name && !isCatId && !isDateTime) {
+                            if (status !== '下架') {
+                                toppingsData.push({ name, price, status });
+                            }
                         }
                     });
+
+                    // 如果篩選完沒有任何資料，啟用預設備用加料
+                    if (toppingsData.length === 0) {
+                        throw new Error("無有效加料資料");
+                    }
                 } catch (e) {
                     console.error("讀取 Toppings 分頁失敗，使用預設加料", e);
                     toppingsData = [
