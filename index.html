@@ -297,6 +297,13 @@
             border-color: var(--primary);
         }
 
+        .option-chip.sold-out {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background: #f1f5f9;
+            text-decoration: line-through;
+        }
+
         /* Cart Bar Floating */
         .cart-bar {
             position: fixed;
@@ -529,16 +536,7 @@
             <div class="option-group">
                 <div class="option-title">加料區</div>
                 <div class="options-flex" id="toppingOptions">
-                    <div class="option-chip" onclick="toggleTopping(this, '波霸珍珠', 10)">波霸珍珠 (+10)</div>
-                    <div class="option-chip" onclick="toggleTopping(this, '椰果', 5)">椰果 (+5)</div>
-                    <div class="option-chip" onclick="toggleTopping(this, '手工藍莓凍', 15)">手工藍莓凍 (+15)</div>
-                    <div class="option-chip" onclick="toggleTopping(this, '寒天晶球', 10)">寒天晶球 (+10)</div>
-                    <div class="option-chip" onclick="toggleTopping(this, '蘆薈果漾', 20)">蘆薈果漾 (+20)</div>
-                    <div class="option-chip" onclick="toggleTopping(this, '統一布丁', 15)">統一布丁 (+15)</div>
-                    <div class="option-chip" onclick="toggleTopping(this, '鮮奶', 25)">鮮奶 (+25)</div>
-                    <div class="option-chip" onclick="toggleTopping(this, '岩鹽奶霜', 20)">岩鹽奶霜 (+20)</div>
-                    <div class="option-chip" onclick="toggleTopping(this, '芒果爆珠', 20)">芒果爆珠 (+20)</div>
-                    <div class="option-chip" onclick="toggleTopping(this, '可爾彈丸', 20)">可爾彈丸 (+20)</div>
+                    <!-- 動態從試算表 Toppings 載入 -->
                 </div>
             </div>
 
@@ -616,10 +614,12 @@
 
     <script>
         const SPREADSHEET_ID = '1_5ynzti6fA6RUq5UUjB28oxw2u2eFMs4RiGRzUmKvQU';
-        const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
+        const MENU_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
+        const TOPPINGS_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=Toppings`;
         const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxpuB_w20nq4ZtldzABmuVqu-iUUgDFW1nBQpuFP2j_8Yj2cv7qla-atfDfCWDFxxb5RA/exec';
 
         let menuData = [];
+        let toppingsData = [];
         let cart = [];
         let currentItem = null;
         let selectedSweetness = '多糖';
@@ -656,20 +656,17 @@
             select.innerHTML = '';
 
             const now = new Date();
-            // 從現在起算 15 分鐘後
             let targetTime = new Date(now.getTime() + 15 * 60000);
 
             let currentMinutes = targetTime.getHours() * 60 + targetTime.getMinutes();
             const openLimit = 11 * 60;
             const closeLimit = 22 * 60;
 
-            // 如果還沒到營業開始時間，從 11:15 開始起算
             if (currentMinutes < openLimit) {
                 currentMinutes = openLimit + 15;
             }
 
             let count = 0;
-            // 最多往後產生 12 個選項（3小時內）
             while (currentMinutes <= closeLimit && count < 12) {
                 const h = Math.floor(currentMinutes / 60);
                 const m = currentMinutes % 60;
@@ -692,17 +689,21 @@
             }
         }
 
-        async function fetchMenuFromSheet() {
+        async function fetchAllData() {
             try {
-                const response = await fetch(SHEET_URL);
-                const text = await response.text();
-                const jsonStr = text.substring(47, text.length - 2);
-                const json = JSON.parse(jsonStr);
+                // 同時讀取主選單與加料分頁
+                const [menuRes, toppingsRes] = await Promise.all([
+                    fetch(MENU_SHEET_URL),
+                    fetch(TOPPINGS_SHEET_URL)
+                ]);
 
-                const rows = json.table.rows;
+                // 解析主選單
+                const menuText = await menuRes.text();
+                const menuJson = JSON.parse(menuText.substring(47, menuText.length - 2));
+                const menuRows = menuJson.table.rows;
                 const categoriesMap = {};
 
-                rows.forEach(row => {
+                menuRows.forEach(row => {
                     const c = row.c;
                     if (!c || !c[0] || !c[1] || !c[2] || !c[3]) return;
 
@@ -720,12 +721,39 @@
                     }
                     categoriesMap[catId].items.push({ name, price, desc, status });
                 });
-
                 menuData = Object.values(categoriesMap);
+
+                // 解析加料清單 (Toppings)
+                try {
+                    const toppingsText = await toppingsRes.text();
+                    const toppingsJson = JSON.parse(toppingsText.substring(47, toppingsText.length - 2));
+                    const toppingRows = toppingsJson.table.rows;
+                    
+                    toppingsData = [];
+                    toppingRows.forEach(row => {
+                        const c = row.c;
+                        if (!c || !c[0]) return;
+                        const name = c[0] ? c[0].v : '';
+                        const price = c[1] ? Number(c[1].v) : 0;
+                        const status = c[2] ? c[2].v : '上架';
+
+                        if (status !== '下架') {
+                            toppingsData.push({ name, price, status });
+                        }
+                    });
+                } catch (e) {
+                    console.error("讀取 Toppings 分頁失敗，使用預設加料", e);
+                    toppingsData = [
+                        { name: '波霸珍珠', price: 10, status: '上架' },
+                        { name: '椰果', price: 5, status: '上架' },
+                        { name: '手工藍莓凍', price: 15, status: '上架' }
+                    ];
+                }
+
                 renderMenuNav();
                 renderMenu();
             } catch (err) {
-                console.error("讀取試算表失敗，使用預設菜單", err);
+                console.error("讀取試算表失敗，使用預設資料", err);
                 loadDefaultMenu();
             }
         }
@@ -740,6 +768,10 @@
                         { name: '老派紅茶', price: 35, desc: '古早味紅茶香氣，經典不敗', status: '上架' }
                     ]
                 }
+            ];
+            toppingsData = [
+                { name: '波霸珍珠', price: 10, status: '上架' },
+                { name: '椰果', price: 5, status: '上架' }
             ];
             renderMenuNav();
             renderMenu();
@@ -784,6 +816,27 @@
             });
         }
 
+        function renderToppingsModal() {
+            const container = document.getElementById('toppingOptions');
+            container.innerHTML = '';
+
+            toppingsData.forEach(topping => {
+                const isSoldOut = topping.status === '售完';
+                const chip = document.createElement('div');
+                chip.className = `option-chip ${isSoldOut ? 'sold-out' : ''}`;
+                
+                if (isSoldOut) {
+                    chip.innerHTML = `${topping.name} (售完)`;
+                } else {
+                    chip.innerHTML = `${topping.name} (+${topping.price})`;
+                    chip.onclick = function() {
+                        toggleTopping(this, topping.name, topping.price);
+                    };
+                }
+                container.appendChild(chip);
+            });
+        }
+
         function scrollToCategory(id) {
             if (id === 'all') {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -814,7 +867,7 @@
 
             resetChipSelection('sweetnessOptions', 0);
             resetChipSelection('iceOptions', 0);
-            document.querySelectorAll('#toppingOptions .option-chip').forEach(c => c.classList.remove('selected'));
+            renderToppingsModal();
 
             document.getElementById('itemModal').classList.add('active');
         }
@@ -1019,7 +1072,7 @@
 
         // 初始化執行
         checkBusinessHours();
-        fetchMenuFromSheet();
+        fetchAllData();
     </script>
 </body>
 </html>
