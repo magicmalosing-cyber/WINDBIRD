@@ -554,7 +554,7 @@
                 </div>
             </div>
 
-            <!-- 新增：Modal 內數量調整區塊 -->
+            <!-- Modal 內數量調整區塊 -->
             <div class="modal-qty-row">
                 <span style="font-weight: 700; font-size: 0.9rem;">數量</span>
                 <div class="qty-controls">
@@ -648,7 +648,7 @@
         let sweetnessPrice = 0;
         let selectedIce = '多冰';
         let selectedToppings = [];
-        let modalQty = 1; // 記錄 Modal 內的數量
+        let modalQty = 1;
         let selectedPayMethod = 'LINE Pay';
         let isStoreOpen = true;
 
@@ -673,41 +673,32 @@
             generatePickupTimeOptions();
         }
 
-        // 產生 15 分鐘為間隔的取餐時間選項
+        // 產生 30 分鐘為間隔、涵蓋整段營業時間 (11:00 ~ 22:00) 的取餐時間選項
         function generatePickupTimeOptions() {
             const select = document.getElementById('custPickupTime');
             select.innerHTML = '';
 
-            const now = new Date();
-            let targetTime = new Date(now.getTime() + 15 * 60000);
+            const openLimit = 11 * 60;  // 11:00
+            const closeLimit = 22 * 60; // 22:00
+            let currentMinutes = openLimit;
 
-            let currentMinutes = targetTime.getHours() * 60 + targetTime.getMinutes();
-            const openLimit = 11 * 60;
-            const closeLimit = 22 * 60;
-
-            if (currentMinutes < openLimit) {
-                currentMinutes = openLimit + 15;
-            }
-
-            let count = 0;
-            while (currentMinutes <= closeLimit && count < 12) {
+            while (currentMinutes <= closeLimit) {
                 const h = Math.floor(currentMinutes / 60);
                 const m = currentMinutes % 60;
                 const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 
                 const option = document.createElement('option');
                 option.value = `${timeStr} 取餐`;
-                option.innerText = `${timeStr} (約 15 分鐘後起)`;
+                option.innerText = `${timeStr} 取餐`;
                 select.appendChild(option);
 
-                currentMinutes += 15;
-                count++;
+                currentMinutes += 30; // 改為 30 分鐘為間隔
             }
 
             if (select.options.length === 0) {
                 const option = document.createElement('option');
                 option.value = '營業時間外預約';
-                option.innerText = '目前非營業時間，將於明天營業日處理';
+                option.innerText = '目前非營業時間';
                 select.appendChild(option);
             }
         }
@@ -829,7 +820,7 @@
             sweetnessPrice = 0;
             selectedIce = '多冰';
             selectedToppings = [];
-            modalQty = 1; // 每次開啟重設為 1
+            modalQty = 1;
 
             document.getElementById('modalItemName').innerText = name;
             document.getElementById('modalItemPrice').innerText = `$${price}`;
@@ -873,7 +864,6 @@
             }
         }
 
-        // Modal 內數量增減控制
         function changeModalQty(delta) {
             modalQty += delta;
             if (modalQty < 1) modalQty = 1;
@@ -896,7 +886,7 @@
                 sweetness: selectedSweetness,
                 ice: selectedIce,
                 toppings: [...selectedToppings],
-                qty: modalQty // 使用 Modal 內調整好的數量
+                qty: modalQty
             };
 
             cart.push(cartItem);
