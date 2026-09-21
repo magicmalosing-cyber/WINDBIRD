@@ -794,7 +794,9 @@ async function fetchAllData() {
             const nav = document.getElementById('categoryNav');
             let navHtml = `<button class="category-btn active" onclick="scrollToCategory('all')">全部商品</button>`;
             menuData.forEach(cat => {
-                navHtml += `<button class="category-btn" onclick="scrollToCategory('${cat.id}')">${cat.title}</button>`;
+                // 如果分類名稱裡面有刮號，按鈕只取刮號前面的文字，保持乾淨
+                let shortTitle = cat.title.split('（')[0].split('(')[0].trim();
+                navHtml += `<button class="category-btn" onclick="scrollToCategory('${cat.id}')">${shortTitle}</button>`;
             });
             nav.innerHTML = navHtml;
         }
