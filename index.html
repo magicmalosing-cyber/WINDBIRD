@@ -1,13 +1,3 @@
-<!-- 
-===================================================
- 風鳥堂 - LINE Messaging API 設定資訊備忘
-===================================================
- User ID: U36aa1eb3ce3d351f36619f5b581b2c63
- Channel Access Token: Fm9uIWpOObrKw5iP0CDgceEyd7xiN1rybNS84qsw/pOloAvmGapA0raVpHL6O02UJadGvwfYEEg84Ms1PGupjOoG3O548pCmdm/ERBtssOj6RegewCdOzSD4ccNefTryI8SMKaxgO8PjP5jdwzd1YAdB04t89/1O/w1cDnyilFU=
- Channel Secret: 5889de66d1846cacaad7ce51602e1a02
- Official LINE ID: @694hwlae
-===================================================
--->
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -15,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>風鳥堂 - 線上訂餐</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- 引入 LINE LIFF SDK -->
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
         :root {
             --primary: #1e3a8a;
@@ -307,7 +299,6 @@
             border-color: var(--primary);
         }
 
-        /* Modal 內數量調整區塊 */
         .modal-qty-row {
             display: flex;
             justify-content: space-between;
@@ -319,7 +310,6 @@
             border: 1px solid var(--border-color);
         }
 
-        /* Cart Bar Floating */
         .cart-bar {
             position: fixed;
             bottom: 1rem;
@@ -423,7 +413,6 @@
             background: white;
         }
 
-        /* Payment QR Area */
         .qr-box {
             text-align: center;
             background: #f1f5f9;
@@ -479,23 +468,19 @@
     </header>
 
     <div class="container">
-        <!-- 營業時間提示 -->
         <div class="closed-overlay" id="closedOverlay">
             <i class="fa-solid fa-store-slash"></i> 目前為非營業時間（營業時間為 11:00 ~ 22:00），暫不開放線上點餐！
         </div>
 
-        <!-- 分類導航欄 -->
         <nav class="category-nav" id="categoryNav">
             <button class="category-btn active" onclick="scrollToCategory('all')">載入中...</button>
         </nav>
 
-        <!-- 菜單列表 -->
         <div id="menuContainer">
             <div class="loading-box"><i class="fa-solid fa-spinner fa-spin"></i> 菜單載入中，請稍候...</div>
         </div>
     </div>
 
-    <!-- 浮動購物車條 -->
     <div class="cart-bar" id="cartBar" onclick="openCartModal()">
         <div class="cart-summary">
             <i class="fa-solid fa-shopping-bag"></i>
@@ -564,7 +549,6 @@
                 </div>
             </div>
 
-            <!-- Modal 內數量調整區塊 -->
             <div class="modal-qty-row">
                 <span style="font-weight: 700; font-size: 0.9rem;">數量</span>
                 <div class="qty-controls">
@@ -590,9 +574,7 @@
 
             <div style="border-top: 2px solid var(--border-color); padding-top: 1rem; margin-top: 1rem;">
                 <label style="font-size: 0.85rem; font-weight: bold;">預計取餐時間</label>
-                <select id="custPickupTime" class="form-select">
-                    <!-- 動態帶入 -->
-                </select>
+                <select id="custPickupTime" class="form-select"></select>
 
                 <label style="font-size: 0.85rem; font-weight: bold;">訂購人姓名</label>
                 <input type="text" id="custName" class="form-input" placeholder="請輸入姓名">
@@ -647,6 +629,8 @@
     </div>
 
     <script>
+        // LIFF 設定
+        const LIFF_ID = '2011685292-XSvTY2FG';
         const SPREADSHEET_ID = '1_5ynzti6fA6RUq5UUjB28oxw2u2eFMs4RiGRzUmKvQU';
         const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
         const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxpuB_w20nq4ZtldzABmuVqu-iUUgDFW1nBQpuFP2j_8Yj2cv7qla-atfDfCWDFxxb5RA/exec';
@@ -662,15 +646,22 @@
         let selectedPayMethod = 'LINE Pay';
         let isStoreOpen = true;
 
-        // 檢查營業時間 (11:00 ~ 22:00)
+        // 初始化 LIFF
+        document.addEventListener("DOMContentLoaded", function() {
+            liff.init({ liffId: LIFF_ID })
+                .then(() => {
+                    if (!liff.isLoggedIn() && liff.isInClient()) {
+                        liff.login();
+                    }
+                })
+                .catch(err => console.error("LIFF 初始化失敗:", err));
+        });
+
         function checkBusinessHours() {
             const now = new Date();
-            const hours = now.getHours();
-            const minutes = now.getMinutes();
-            const currentTimeVal = hours * 60 + minutes;
-
-            const openTimeVal = 11 * 60; // 11:00
-            const closeTimeVal = 22 * 60; // 22:00
+            const currentTimeVal = now.getHours() * 60 + now.getMinutes();
+            const openTimeVal = 11 * 60;
+            const closeTimeVal = 22 * 60;
 
             if (currentTimeVal < openTimeVal || currentTimeVal > closeTimeVal) {
                 isStoreOpen = false;
@@ -683,33 +674,25 @@
             generatePickupTimeOptions();
         }
 
-        // 產生 30 分鐘為間隔、涵蓋營業時間 (11:00 ~ 22:00)，且過濾掉已經過去的時間
         function generatePickupTimeOptions() {
             const select = document.getElementById('custPickupTime');
             select.innerHTML = '';
-
             const now = new Date();
             const currentTotalMins = now.getHours() * 60 + now.getMinutes();
+            let currentMinutes = 11 * 60;
 
-            const openLimit = 11 * 60;  // 11:00
-            const closeLimit = 22 * 60; // 22:00
-            let currentMinutes = openLimit;
-
-            while (currentMinutes <= closeLimit) {
+            while (currentMinutes <= 22 * 60) {
                 if (isStoreOpen && currentTotalMins >= currentMinutes) {
                     currentMinutes += 30;
                     continue;
                 }
-
                 const h = Math.floor(currentMinutes / 60);
                 const m = currentMinutes % 60;
                 const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-
                 const option = document.createElement('option');
                 option.value = `${timeStr} 取餐`;
                 option.innerText = `${timeStr} 取餐`;
                 select.appendChild(option);
-
                 currentMinutes += 30;
             }
 
@@ -754,24 +737,8 @@
                 renderMenuNav();
                 renderMenu();
             } catch (err) {
-                console.error("讀取試算表失敗，使用預設菜單", err);
-                loadDefaultMenu();
+                console.error("讀取試算表失敗", err);
             }
-        }
-
-        function loadDefaultMenu() {
-            menuData = [
-                {
-                    id: 'cat-1',
-                    title: '🌿 台灣原生茶',
-                    items: [
-                        { name: '招牌風鳥茶', price: 35, desc: '風鳥堂獨家配方，甘醇順口回甘', status: '上架' },
-                        { name: '老派紅茶', price: 35, desc: '古早味紅茶香氣，經典不敗', status: '上架' }
-                    ]
-                }
-            ];
-            renderMenuNav();
-            renderMenu();
         }
 
         function renderMenuNav() {
@@ -821,8 +788,7 @@
             }
             const el = document.getElementById(id);
             if (el) {
-                const yOffset = -70;
-                const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                const y = el.getBoundingClientRect().top + window.pageYOffset - 70;
                 window.scrollTo({ top: y, behavior: 'smooth' });
             }
         }
@@ -832,7 +798,6 @@
                 alert('目前為非營業時間，無法點餐喔！');
                 return;
             }
-
             currentItem = { name, price };
             selectedSweetness = '多糖';
             sweetnessPrice = 0;
@@ -896,7 +861,7 @@
             const toppingCost = selectedToppings.reduce((sum, t) => sum + t.price, 0);
             const finalPrice = currentItem.price + sweetnessPrice + toppingCost;
 
-            const cartItem = {
+            cart.push({
                 id: Date.now(),
                 name: currentItem.name,
                 basePrice: currentItem.price,
@@ -905,9 +870,8 @@
                 ice: selectedIce,
                 toppings: [...selectedToppings],
                 qty: modalQty
-            };
+            });
 
-            cart.push(cartItem);
             updateCart();
             closeModal('itemModal');
         }
@@ -940,12 +904,8 @@
                 itemDiv.innerHTML = `
                     <div>
                         <div style="font-weight: bold;">${item.name}</div>
-                        <div style="font-size: 0.8rem; color: var(--text-muted);">
-                            ${item.sweetness} / ${item.ice}${toppingsText}
-                        </div>
-                        <div style="color: var(--accent); font-weight: bold; font-size: 0.9rem;">
-                            $${item.finalPrice * item.qty}
-                        </div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">${item.sweetness} / ${item.ice}${toppingsText}</div>
+                        <div style="color: var(--accent); font-weight: bold; font-size: 0.9rem;">$${item.finalPrice * item.qty}</div>
                     </div>
                     <div class="qty-controls">
                         <button class="qty-btn" onclick="changeQty(${item.id}, -1)">-</button>
@@ -963,16 +923,11 @@
             const item = cart.find(i => i.id === id);
             if (item) {
                 item.qty += delta;
-                if (item.qty <= 0) {
-                    cart = cart.filter(i => i.id !== id);
-                }
+                if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
             }
             updateCart();
-            if (cart.length === 0) {
-                closeModal('cartModal');
-            } else {
-                openCartModal();
-            }
+            if (cart.length === 0) closeModal('cartModal');
+            else openCartModal();
         }
 
         function goToPayment() {
@@ -994,7 +949,6 @@
         function switchPayTab(type) {
             document.getElementById('btnTabLinePay').classList.remove('active');
             document.getElementById('btnTabJko').classList.remove('active');
-
             document.getElementById('payBoxLinePay').style.display = 'none';
             document.getElementById('payBoxJko').style.display = 'none';
 
@@ -1009,6 +963,7 @@
             }
         }
 
+        // 送出訂單（含 LINE 訊息發送）
         async function submitOrder() {
             const pickupTime = document.getElementById('custPickupTime').value;
             const name = document.getElementById('custName').value.trim();
@@ -1016,46 +971,62 @@
             const note = document.getElementById('custNote').value.trim();
             const total = cart.reduce((sum, item) => sum + (item.finalPrice * item.qty), 0);
 
-            const orderData = {
-                pickupTime: pickupTime,
-                payMethod: selectedPayMethod,
-                name: name,
-                phone: phone,
-                note: note,
-                total: total,
-                cart: cart
-            };
+            let itemsText = cart.map(item => {
+                let toppings = item.toppings.length > 0 ? ` (+${item.toppings.map(t => t.name).join(', ')})` : '';
+                return `‧ ${item.name} x${item.qty} [${item.sweetness}/${item.ice}]${toppings} - $${item.finalPrice * item.qty}`;
+            }).join('\n');
+
+            let lineMsg = `📋 【風鳥堂 - 線上點餐單】\n` +
+                          `------------------------------\n` +
+                          `取餐時間：${pickupTime}\n` +
+                          `訂購姓名：${name}\n` +
+                          `聯絡電話：${phone}\n` +
+                          `付款方式：${selectedPayMethod}\n` +
+                          `備註需求：${note || '無'}\n` +
+                          `------------------------------\n` +
+                          `訂購品項：\n${itemsText}\n` +
+                          `------------------------------\n` +
+                          `總計金額：$${total} 元`;
 
             const btn = document.getElementById('submitOrderBtn');
             btn.disabled = true;
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 正在傳送訂單...`;
 
             try {
+                // 1. 在 LINE 對話框發送訊息
+                if (liff.isInClient()) {
+                    await liff.sendMessages([{ type: 'text', text: lineMsg }]);
+                }
+
+                // 2. 將訂單資料寫入 Google 試算表
                 await fetch(GAS_WEB_APP_URL, {
                     method: 'POST',
                     mode: 'no-cors',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(orderData)
+                    body: JSON.stringify({ pickupTime, payMethod: selectedPayMethod, name, phone, note, total, cart })
                 });
 
-                alert('訂單已成功送出！店家已收到通知。');
+                alert('訂單已成功送出！訊息已發送至 LINE 聊天室。');
                 cart = [];
                 updateCart();
                 closeModal('payModal');
-                
+
                 document.getElementById('custName').value = '';
                 document.getElementById('custPhone').value = '';
                 document.getElementById('custNote').value = '';
+
+                if (liff.isInClient()) {
+                    liff.closeWindow(); // 關閉 LIFF 網頁回到對話框
+                }
             } catch (error) {
                 console.error('送出失敗', error);
-                alert('發送發生一點狀況，請直接與店家聯繫確認！');
+                alert('訂單傳送發生問題，請確認已開啟 LINE 訊息權限！');
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = `<i class="fa-brands fa-line" style="font-size: 1.3rem;"></i> 已完成付款，送出訂單`;
             }
         }
 
-        // 初始化執行
         checkBusinessHours();
         fetchMenuFromSheet();
     </script>
