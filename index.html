@@ -673,16 +673,25 @@
             generatePickupTimeOptions();
         }
 
-        // 產生 30 分鐘為間隔、涵蓋整段營業時間 (11:00 ~ 22:00) 的取餐時間選項
+        // 產生 30 分鐘為間隔、涵蓋營業時間 (11:00 ~ 22:00)，且過濾掉已經過去的時間
         function generatePickupTimeOptions() {
             const select = document.getElementById('custPickupTime');
             select.innerHTML = '';
+
+            const now = new Date();
+            const currentTotalMins = now.getHours() * 60 + now.getMinutes();
 
             const openLimit = 11 * 60;  // 11:00
             const closeLimit = 22 * 60; // 22:00
             let currentMinutes = openLimit;
 
             while (currentMinutes <= closeLimit) {
+                // 如果當前時間已經大於或等於這個選項的時間點，就略過不加入（不讓使用者選過去的時間）
+                if (isStoreOpen && currentTotalMins >= currentMinutes) {
+                    currentMinutes += 30;
+                    continue;
+                }
+
                 const h = Math.floor(currentMinutes / 60);
                 const m = currentMinutes % 60;
                 const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
@@ -692,13 +701,13 @@
                 option.innerText = `${timeStr} 取餐`;
                 select.appendChild(option);
 
-                currentMinutes += 30; // 改為 30 分鐘為間隔
+                currentMinutes += 30; // 30 分鐘為間隔
             }
 
             if (select.options.length === 0) {
                 const option = document.createElement('option');
                 option.value = '營業時間外預約';
-                option.innerText = '目前非營業時間';
+                option.innerText = '目前非營業時間或今日可預約時段已滿';
                 select.appendChild(option);
             }
         }
