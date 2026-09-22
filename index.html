@@ -31,6 +31,30 @@
             padding-bottom: 80px;
         }
 
+        /* 頂部全店慶跑馬燈 */
+        .marquee-container {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 700;
+            overflow: hidden;
+            white-space: nowrap;
+            border-bottom: 1px solid #fde68a;
+            position: relative;
+        }
+
+        .marquee-content {
+            display: inline-block;
+            padding-left: 100%;
+            animation: marquee 18s linear infinite;
+        }
+
+        @keyframes marquee {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-100%, 0); }
+        }
+
         header {
             background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
             color: white;
@@ -57,6 +81,42 @@
             max-width: 1000px;
             margin: 0 auto;
             padding: 1rem;
+        }
+
+        /* 一鍵再點快速回購區塊 */
+        .reorder-card {
+            background: #eff6ff;
+            border: 1px dashed var(--primary-light);
+            border-radius: var(--radius);
+            padding: 0.85rem 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .reorder-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.2rem;
+        }
+
+        .reorder-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .reorder-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            cursor: pointer;
+            white-space: nowrap;
         }
 
         /* 營業時間 / 手動關閉提示遮罩 */
@@ -456,9 +516,26 @@
             font-size: 1.1rem;
             color: var(--text-muted);
         }
+
+        .gift-badge-item {
+            background: #fee2e2;
+            color: #b91c1c;
+            font-size: 0.75rem;
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-left: 0.3rem;
+        }
     </style>
 </head>
 <body>
+
+    <!-- 跑馬燈 -->
+    <div class="marquee-container">
+        <div class="marquee-content">
+            🎉 全店慶慶祝中！單筆點餐滿 $300 元即免費贈送『招牌風鳥茶』乙杯（可自選甜度冰塊）！
+        </div>
+    </div>
 
     <header>
         <div class="header-title">風鳥堂林口中山店</div>
@@ -466,6 +543,15 @@
     </header>
 
     <div class="container">
+        <!-- 一鍵再點快速卡片 (預設隱藏) -->
+        <div class="reorder-card" id="reorderCard" style="display: none;">
+            <div>
+                <div class="reorder-title"><i class="fa-solid fa-rotate-left"></i> 一鍵快速再點</div>
+                <div class="reorder-desc" id="reorderSummary">載入上次點餐明細...</div>
+            </div>
+            <button class="reorder-btn" onclick="applyLastOrder()"><i class="fa-solid fa-cart-plus"></i> 直接套用</button>
+        </div>
+
         <!-- 營業時間 / 手動關閉提示 -->
         <div class="closed-overlay" id="closedOverlay">
             <i class="fa-solid fa-store-slash"></i> <span id="closedMsg">目前為非營業時間（營業時間為 11:00 ~ 22:00），暫不開放線上點餐！</span>
@@ -550,6 +636,44 @@
             </div>
 
             <button class="btn-primary" style="background-color: var(--primary);" onclick="confirmAddToCart()">加入購物車</button>
+        </div>
+    </div>
+
+    <!-- 滿額贈品選擇 Modal -->
+    <div class="modal-backdrop" id="giftModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title" style="color: #b91c1c;"><i class="fa-solid fa-gift"></i> 滿額贈禮選擇</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">滿 $300 贈『招牌風鳥茶』乙杯，請選擇喜好的冰甜：</div>
+                </div>
+                <button class="close-btn" onclick="closeModal('giftModal')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="option-group">
+                <div class="option-title">贈品甜度</div>
+                <div class="options-flex" id="giftSweetnessOptions">
+                    <div class="option-chip" onclick="selectGiftOption(this, 'sweetness', '多糖')">多糖</div>
+                    <div class="option-chip" onclick="selectGiftOption(this, 'sweetness', '正常糖')">正常糖</div>
+                    <div class="option-chip" onclick="selectGiftOption(this, 'sweetness', '少糖(7分)')">少糖(7分)</div>
+                    <div class="option-chip selected" onclick="selectGiftOption(this, 'sweetness', '半糖(5分)')">半糖(5分)</div>
+                    <div class="option-chip" onclick="selectGiftOption(this, 'sweetness', '微糖(3分)')">微糖(3分)</div>
+                    <div class="option-chip" onclick="selectGiftOption(this, 'sweetness', '無糖')">無糖</div>
+                </div>
+            </div>
+
+            <div class="option-group">
+                <div class="option-title">贈品冰塊</div>
+                <div class="options-flex" id="giftIceOptions">
+                    <div class="option-chip" onclick="selectGiftOption(this, 'ice', '多冰')">多冰</div>
+                    <div class="option-chip" onclick="selectGiftOption(this, 'ice', '正常冰')">正常冰</div>
+                    <div class="option-chip selected" onclick="selectGiftOption(this, 'ice', '少冰')">少冰</div>
+                    <div class="option-chip" onclick="selectGiftOption(this, 'ice', '微冰')">微冰</div>
+                    <div class="option-chip" onclick="selectGiftOption(this, 'ice', '去冰')">去冰</div>
+                </div>
+            </div>
+
+            <button class="btn-primary" style="background-color: #b91c1c;" onclick="confirmGiftSelection()">確認選取贈品，前往結帳 ➔</button>
         </div>
     </div>
 
@@ -638,11 +762,15 @@
         let modalQty = 1;
         let selectedPayMethod = 'LINE Pay';
         
+        // 滿額贈預設選取
+        let freeGiftSweetness = '半糖(5分)';
+        let freeGiftIce = '少冰';
+
         let isStoreOpen = true;
-        let isManualClosed = false; // 手動關閉標記
+        let isManualClosed = false;
 
         function checkBusinessHours() {
-            if (isManualClosed) return; // 如果已被手動關閉，不重複處理
+            if (isManualClosed) return;
 
             const now = new Date();
             const currentTimeVal = now.getHours() * 60 + now.getMinutes();
@@ -720,7 +848,6 @@
                     const desc = c[4] ? String(c[4].v || '') : '';
                     const status = c[5] ? String(c[5].v || '上架') : '上架';
 
-                    // 檢查是否為手動關閉平台的設定
                     if (catId === 'system' || rawName.includes('平台開關')) {
                         if (status === '暫停營業' || status === '關閉' || status === '下架') {
                             setManualClosed(desc);
@@ -764,6 +891,7 @@
                 menuData = Object.values(categoriesMap);
                 renderMenuNav();
                 renderMenu();
+                setupScrollspy(); // 載入後啟動滾動監聽
             } catch (err) {
                 console.error("讀取試算表失敗，使用預設菜單", err);
                 loadDefaultMenu();
@@ -799,14 +927,15 @@
             ];
             renderMenuNav();
             renderMenu();
+            setupScrollspy();
         }
 
         function renderMenuNav() {
             const nav = document.getElementById('categoryNav');
-            let navHtml = `<button class="category-btn active" onclick="scrollToCategory('all')">全部商品</button>`;
+            let navHtml = `<button class="category-btn active" data-cat="all" onclick="scrollToCategory('all')">全部商品</button>`;
             menuData.forEach(cat => {
                 let shortTitle = cat.title.split('（')[0].split('(')[0].trim();
-                navHtml += `<button class="category-btn" onclick="scrollToCategory('${cat.id}')">${shortTitle}</button>`;
+                navHtml += `<button class="category-btn" data-cat="${cat.id}" onclick="scrollToCategory('${cat.id}')">${shortTitle}</button>`;
             });
             nav.innerHTML = navHtml;
         }
@@ -818,6 +947,7 @@
             menuData.forEach(cat => {
                 const section = document.createElement('section');
                 section.id = cat.id;
+                section.className = 'menu-section';
                 
                 let itemsHtml = cat.items.map(item => {
                     const isSoldOut = item.status === '售完';
@@ -841,6 +971,45 @@
             });
         }
 
+        /* 滾動聯動高亮 (Scrollspy) */
+        function setupScrollspy() {
+            window.addEventListener('scroll', () => {
+                const sections = document.querySelectorAll('.menu-section');
+                const navBtns = document.querySelectorAll('.category-btn');
+                let currentCat = 'all';
+
+                sections.forEach(sec => {
+                    const top = sec.offsetTop - 120;
+                    if (window.scrollY >= top) {
+                        currentCat = sec.id;
+                    }
+                });
+
+                if (window.scrollY < 100) currentCat = 'all';
+
+                navBtns.forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.getAttribute('data-cat') === currentCat) {
+                        btn.classList.add('active');
+                        btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                    }
+                });
+            });
+        }
+
+        function scrollToCategory(id) {
+            if (id === 'all') {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+            const el = document.getElementById(id);
+            if (el) {
+                const yOffset = -70;
+                const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                window.scrollTo({ top: y, behavior: 'smooth' });
+            }
+        }
+
         function renderToppingsModal() {
             const container = document.getElementById('toppingOptions');
             if (!container) return;
@@ -860,19 +1029,6 @@
                 }
             });
             container.innerHTML = html;
-        }
-
-        function scrollToCategory(id) {
-            if (id === 'all') {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                return;
-            }
-            const el = document.getElementById(id);
-            if (el) {
-                const yOffset = -70;
-                const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
-                window.scrollTo({ top: y, behavior: 'smooth' });
-            }
         }
 
         function openItemModal(name, price) {
@@ -1034,8 +1190,32 @@
             }
 
             const total = cart.reduce((sum, item) => sum + (item.finalPrice * item.qty), 0);
-            document.getElementById('payModalTotal').innerText = `$${total}`;
 
+            // 檢查是否達到滿 $300 贈品門檻
+            if (total >= 300) {
+                closeModal('cartModal');
+                document.getElementById('giftModal').classList.add('active');
+            } else {
+                showPayModal(total);
+            }
+        }
+
+        function selectGiftOption(el, type, val) {
+            const parent = el.parentElement;
+            parent.querySelectorAll('.option-chip').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+            if (type === 'sweetness') freeGiftSweetness = val;
+            if (type === 'ice') freeGiftIce = val;
+        }
+
+        function confirmGiftSelection() {
+            closeModal('giftModal');
+            const total = cart.reduce((sum, item) => sum + (item.finalPrice * item.qty), 0);
+            showPayModal(total);
+        }
+
+        function showPayModal(total) {
+            document.getElementById('payModalTotal').innerText = `$${total}`;
             closeModal('cartModal');
             document.getElementById('payModal').classList.add('active');
         }
@@ -1058,12 +1238,64 @@
             }
         }
 
+        /* LocalStorage 一鍵再點處理 */
+        function saveLastOrderToStorage(finalCart) {
+            try {
+                localStorage.setItem('feng_last_order', JSON.stringify(finalCart));
+            } catch (e) {
+                console.warn('LocalStorage 無法儲存', e);
+            }
+        }
+
+        function checkLastOrder() {
+            try {
+                const saved = localStorage.getItem('feng_last_order');
+                if (saved) {
+                    const lastCart = JSON.parse(saved);
+                    if (lastCart && lastCart.length > 0) {
+                        const summaryText = lastCart.map(i => `${i.name} x${i.qty}`).join(', ');
+                        document.getElementById('reorderSummary').innerText = summaryText;
+                        document.getElementById('reorderCard').style.display = 'flex';
+                    }
+                }
+            } catch (e) {
+                console.warn('LocalStorage 讀取失敗', e);
+            }
+        }
+
+        function applyLastOrder() {
+            try {
+                const saved = localStorage.getItem('feng_last_order');
+                if (saved) {
+                    const lastCart = JSON.parse(saved);
+                    cart = lastCart.map(i => ({ ...i, id: Date.now() + Math.random() }));
+                    updateCart();
+                    alert('已順利將上次點餐品項載入購物車！');
+                }
+            } catch (e) {
+                alert('套用歷史訂單時發生錯誤！');
+            }
+        }
+
         async function submitOrder() {
             const pickupTime = document.getElementById('custPickupTime').value;
             const name = document.getElementById('custName').value.trim();
             const phone = document.getElementById('custPhone').value.trim();
             const note = document.getElementById('custNote').value.trim();
             const total = cart.reduce((sum, item) => sum + (item.finalPrice * item.qty), 0);
+
+            // 若滿 300 元，自動寫入贈品
+            let finalCartForSubmit = [...cart];
+            if (total >= 300) {
+                finalCartForSubmit.push({
+                    name: "🎁 [滿額贈] 招牌風鳥茶",
+                    finalPrice: 0,
+                    sweetness: freeGiftSweetness,
+                    ice: freeGiftIce,
+                    toppings: [],
+                    qty: 1
+                });
+            }
 
             const orderData = {
                 pickupTime: pickupTime,
@@ -1072,59 +1304,66 @@
                 phone: phone,
                 note: note,
                 total: total,
-                cart: cart
+                cart: finalCartForSubmit
             };
 
             const btn = document.getElementById('submitOrderBtn');
             btn.disabled = true;
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 正在處理中...`;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 正在傳送訂單...`;
 
+            // 1. 存入 LocalStorage 供「一鍵再點」
+            saveLastOrderToStorage(cart);
+
+            // 2. 組裝 LINE 訊息內容
+            let itemsDetail = '';
+            finalCartForSubmit.forEach(item => {
+                let toppingsText = (item.toppings && item.toppings.length > 0) ? ` + ${item.toppings.map(t=>t.name).join(', ')}` : '';
+                itemsDetail += `• ${item.name} x${item.qty}\n  (${item.sweetness} / ${item.ice}${toppingsText}) - $${item.finalPrice * item.qty}\n`;
+            });
+
+            const lineMsg = `📋 【風鳥堂 - 線上點餐單】\n` +
+                            `👤 訂購人：${name}\n` +
+                            `📞 電話：${phone}\n` +
+                            `⏰ 取餐時間：${pickupTime}\n` +
+                            `💳 付款方式：${selectedPayMethod}\n` +
+                            `📝 備註：${note || '無'}\n` +
+                            `------------------------------\n` +
+                            `品項明細：\n${itemsDetail}` +
+                            `------------------------------\n` +
+                            `💰 總金額：$${total} 元`;
+
+            const encodedMsg = encodeURIComponent(lineMsg);
+            const lineUrl = `https://line.me/R/oaMessage/@${LINE_OFFICIAL_ID}/?${encodedMsg}`;
+
+            // 3. 背景寫入 GAS 試算表（設定 2.5 秒超時，無論 GAS 成功與否都強制喚起 LINE）
             try {
-                await fetch(GAS_WEB_APP_URL, {
+                const fetchPromise = fetch(GAS_WEB_APP_URL, {
                     method: 'POST',
                     mode: 'no-cors',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(orderData)
                 });
 
-                let itemsDetail = '';
-                cart.forEach(item => {
-                    let toppingsText = item.toppings.length > 0 ? ` + ${item.toppings.map(t=>t.name).join(', ')}` : '';
-                    itemsDetail += `• ${item.name} x${item.qty}\n  (${item.sweetness} / ${item.ice}${toppingsText}) - $${item.finalPrice * item.qty}\n`;
-                });
-
-                const lineMsg = `📋 【風鳥堂 - 線上點餐單】\n` +
-                                `👤 訂購人：${name}\n` +
-                                `📞 電話：${phone}\n` +
-                                `⏰ 取餐時間：${pickupTime}\n` +
-                                `💳 付款方式：${selectedPayMethod}\n` +
-                                `📝 備註：${note || '無'}\n` +
-                                `------------------------------\n` +
-                                `品項明細：\n${itemsDetail}` +
-                                `------------------------------\n` +
-                                `💰 總金額：$${total} 元`;
-
-                const encodedMsg = encodeURIComponent(lineMsg);
-                const lineUrl = `https://line.me/R/oaMessage/@${LINE_OFFICIAL_ID}/?${encodedMsg}`;
-
-                alert('訂單資料已記錄！即將為您跳轉至 LINE，請在對話框點擊「發送」送出點餐單！');
+                const timeoutPromise = new Promise(resolve => setTimeout(resolve, 2500));
                 
-                cart = [];
-                updateCart();
-                closeModal('payModal');
-
-                window.location.href = lineUrl;
-
-            } catch (error) {
-                console.error('送出失敗', error);
-                alert('發送發生一點狀況，請直接與店家聯繫確認！');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = `<i class="fa-brands fa-line" style="font-size: 1.3rem;"></i> 完成付款，傳送訂單至 LINE`;
+                await Promise.race([fetchPromise, timeoutPromise]);
+            } catch (e) {
+                console.warn('GAS 寫入背景異常，仍繼續開啟 LINE:', e);
             }
+
+            // 4. 重置購物車與按鈕
+            cart = [];
+            updateCart();
+            closeModal('payModal');
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-brands fa-line" style="font-size: 1.3rem;"></i> 完成付款，傳送訂單至 LINE`;
+
+            // 5. 開啟 LINE
+            window.open(lineUrl, '_self');
         }
 
         checkBusinessHours();
+        checkLastOrder();
         fetchMenuFromSheet();
     </script>
 </body>
