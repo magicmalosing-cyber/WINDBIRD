@@ -719,9 +719,9 @@
                 <button class="close-btn" onclick="closeModal('payModal')"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <div style="text-align: center; margin-bottom: 0.5rem;">
+            <div style="text-align: center; margin-bottom: 1rem;">
                 <div style="font-size: 0.9rem; color: var(--text-muted);">訂單應付總金額</div>
-                <div style="font-size: 1.8rem; font-weight: 800; color: var(--accent);" id="payModalTotal">$0</div>
+                <div style="font-size: 2rem; font-weight: 800; color: var(--accent);" id="payModalTotal">$0</div>
             </div>
 
             <div class="pay-tab">
@@ -729,19 +729,26 @@
                 <button class="pay-tab-btn" id="btnTabJko" onclick="switchPayTab('jko')">街口支付</button>
             </div>
 
+            <!-- LINE Pay 付款區塊 -->
             <div class="qr-box" id="payBoxLinePay">
-                <p style="font-size: 0.85rem; font-weight: bold; color: var(--text-dark);">請掃描或長按圖片儲存 QR Code 付款</p>
-                <img src="linepay.jpg" alt="LINE Pay QR Code" class="qr-img">
-                <p style="font-size: 0.8rem; color: var(--text-muted);">請先確認已付款完成，之後再請點擊下方按鈕送出訂單</p>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.8rem;">
+                    點擊下方按鈕將開啟 LINE Pay，請在頁面中輸入上方顯示之金額點擊付款：
+                </p>
+                <a href="https://qrcodepay.line.me/qr/payment/BOjxDmAUQUtFfo9Of0%252Fxg8itSY90KZ6E5Ws%252BRp6EcM5ansUivida28vnpnvM%252FAcR" 
+                   target="_blank" 
+                   style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; background-color: #06c755; color: white; padding: 0.85rem 1rem; border-radius: 12px; text-decoration: none; font-weight: bold; font-size: 1.05rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <i class="fa-brands fa-line" style="font-size: 1.5rem;"></i> 開啟 LINE Pay 輸入金額結帳
+                </a>
             </div>
 
+            <!-- 街口支付區塊 -->
             <div class="qr-box" id="payBoxJko" style="display: none;">
                 <p style="font-size: 0.85rem; font-weight: bold; color: var(--text-dark);">請掃描或長按圖片儲存 QR Code 付款</p>
                 <img src="jkopay.jpg" alt="街口支付 QR Code" class="qr-img">
-                <p style="font-size: 0.8rem; color: var(--text-muted);">請最後確認已付款完成，再點擊下方按鈕送出訂單</p>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">請確認已付款完成，再點擊下方按鈕送出訂單</p>
             </div>
 
-            <button class="btn-primary" id="submitOrderBtn" onclick="submitOrder()">
+            <button class="btn-primary" id="submitOrderBtn" onclick="submitOrder()" style="margin-top: 1rem;">
                 <i class="fa-brands fa-line" style="font-size: 1.3rem;"></i> 完成付款，傳送訂單至 LINE
             </button>
         </div>
