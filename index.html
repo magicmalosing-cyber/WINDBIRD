@@ -827,38 +827,48 @@
             document.getElementById('cartBar').style.opacity = '0.5';
         }
 
-        /* 3. 取餐時間自動預留 15-20 分鐘製作時間 */
-        function generatePickupTimeOptions() {
-            const select = document.getElementById('custPickupTime');
-            select.innerHTML = '';
-            const now = new Date();
-            
-            // 加入 15 分鐘前置製作時間
-            const prepTimeMins = 15;
-            const earliestMins = (now.getHours() * 60 + now.getMinutes()) + prepTimeMins;
-            
-            // 向上補齊到最近的 30 分鐘區間
-            let currentMinutes = Math.ceil(earliestMins / 30) * 30;
-            if (currentMinutes < 11 * 60) currentMinutes = 11 * 60;
+        /* 3. 取餐時間自動預留 15 分鐘製作時間（優化邊界判斷） */
+function generatePickupTimeOptions() {
+    const select = document.getElementById('custPickupTime');
+    select.innerHTML = '';
+    const now = new Date();
+    
+    // 加入 15 分鐘前置製作時間
+    const prepTimeMins = 15;
+    const currentMins = now.getHours() * 60 + now.getMinutes();
+    const earliestMins = currentMins + prepTimeMins;
+    
+    // 向上補齊到最近的 30 分鐘區間（例：12:05 -> 12:30）
+    let startMinutes = Math.ceil(earliestMins / 30) * 30;
+    
+    // 若預留時間算出來低於開店時間 11:00，則從 11:00 開始
+    if (startMinutes < 11 * 60) {
+        startMinutes = 11 * 60;
+    }
 
-            while (currentMinutes <= 22 * 60) {
-                const h = Math.floor(currentMinutes / 60);
-                const m = currentMinutes % 60;
-                const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-                const option = document.createElement('option');
-                option.value = `${timeStr} 取餐`;
-                option.innerText = `${timeStr} 取餐`;
-                select.appendChild(option);
-                currentMinutes += 30;
-            }
+    // 當前時間若已經太接近打烊（例：21:45 之後點餐，最快取餐會超過 22:00）
+    if (startMinutes > 22 * 60) {
+        const option = document.createElement('option');
+        option.value = '今日已發完/打烊';
+        option.innerText = '⚠️ 今日打烊前製作時間不足，暫不接單';
+        select.appendChild(option);
+        return;
+    }
 
-            if (select.options.length === 0) {
-                const option = document.createElement('option');
-                option.value = '營業時間外預約';
-                option.innerText = '目前非營業時間或今日可預約時段已滿';
-                select.appendChild(option);
-            }
-        }
+    // 生成可選時段
+    while (startMinutes <= 22 * 60) {
+        const h = Math.floor(startMinutes / 60);
+        const m = startMinutes % 60;
+        const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+        
+        const option = document.createElement('option');
+        option.value = `${timeStr} 取餐`;
+        option.innerText = `${timeStr} 取餐`;
+        select.appendChild(option);
+        
+        startMinutes += 30;
+    }
+}
 
         async function fetchMenuFromSheet() {
             try {
