@@ -526,6 +526,19 @@
             font-weight: bold;
             margin-left: 0.3rem;
         }
+
+        /* 提醒警語外觀 */
+        .pay-warning-box {
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 0.6rem 0.8rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-top: 1rem;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -702,7 +715,7 @@
                 <input type="tel" id="custPhone" class="form-input" placeholder="0912345678">
 
                 <label style="font-size: 0.85rem; font-weight: bold;">備註需求</label>
-                <input type="text" id="custNote" class="form-input" placeholder="例如：發票載具或其他需求">
+                <input type="text" id="custNote" class="form-input" placeholder="例如：發票載具或街口末五碼/付款人姓名">
 
                 <button class="btn-primary" id="goToPayBtn" onclick="goToPayment()">
                     前往付款 / 確認訂單 ➔
@@ -741,12 +754,19 @@
                 </a>
             </div>
 
-            <!-- 街口支付區塊 (靜態 QR Code 圖片) -->
+            <!-- 街口支付區塊 (靜態 QR Code 圖片與明確引導) -->
             <div class="qr-box" id="payBoxJko" style="display: none;">
-                <p style="font-size: 0.85rem; font-weight: bold; color: var(--text-dark);">請截圖或長按儲存下方 QR Code</p>
+                <p style="font-size: 0.85rem; font-weight: bold; color: var(--text-dark);">請長按圖片儲存，或截圖下方 QR Code</p>
                 <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">開啟街口支付 App ➔ 點擊「掃描」選擇相冊圖片進行付款</p>
-                <!-- 此處已替換為您提供的街口圖片名稱 jkopay.jpg -->
-                <img src="jkopay.jpg" alt="街口支付 QR Code" class="qr-img">
+                <a href="jkopay.jpg" target="_blank" title="點擊在新分頁開啟大圖">
+                    <img src="jkopay.jpg" alt="街口支付 QR Code" class="qr-img">
+                </a>
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">（提示：點擊上方圖片可在新頁面開啟大圖便利長按儲存）</p>
+            </div>
+
+            <!-- 提醒確認金額警語 -->
+            <div class="pay-warning-box">
+                ⚠️ 請確認輸入金額與訂單金額（<span id="warningTotalAmount">$0</span>）一致
             </div>
 
             <button class="btn-primary" id="submitOrderBtn" onclick="submitOrder()" style="margin-top: 1rem;">
@@ -807,18 +827,21 @@
             document.getElementById('cartBar').style.opacity = '0.5';
         }
 
+        /* 3. 取餐時間自動預留 15-20 分鐘製作時間 */
         function generatePickupTimeOptions() {
             const select = document.getElementById('custPickupTime');
             select.innerHTML = '';
             const now = new Date();
-            const currentTotalMins = now.getHours() * 60 + now.getMinutes();
-            let currentMinutes = 11 * 60;
+            
+            // 加入 15 分鐘前置製作時間
+            const prepTimeMins = 15;
+            const earliestMins = (now.getHours() * 60 + now.getMinutes()) + prepTimeMins;
+            
+            // 向上補齊到最近的 30 分鐘區間
+            let currentMinutes = Math.ceil(earliestMins / 30) * 30;
+            if (currentMinutes < 11 * 60) currentMinutes = 11 * 60;
 
             while (currentMinutes <= 22 * 60) {
-                if (isStoreOpen && currentTotalMins >= currentMinutes) {
-                    currentMinutes += 30;
-                    continue;
-                }
                 const h = Math.floor(currentMinutes / 60);
                 const m = currentMinutes % 60;
                 const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
@@ -1226,8 +1249,10 @@
             showPayModal(total);
         }
 
+        /* 2. 動態顯示總金額防呆警語 */
         function showPayModal(total) {
             document.getElementById('payModalTotal').innerText = `$${total}`;
+            document.getElementById('warningTotalAmount').innerText = `$${total}`;
             closeModal('cartModal');
             document.getElementById('payModal').classList.add('active');
         }
@@ -1326,7 +1351,7 @@
             // 1. 存入 LocalStorage 供「一鍵再點」
             saveLastOrderToStorage(cart);
 
-            // 2. 組裝 LINE 訊息內容
+            // 2. 組裝 LINE 訊息內容（4. 加入溫馨接單提醒）
             let itemsDetail = '';
             finalCartForSubmit.forEach(item => {
                 let toppingsText = (item.toppings && item.toppings.length > 0) ? ` + ${item.toppings.map(t=>t.name).join(', ')}` : '';
@@ -1342,7 +1367,9 @@
                             `------------------------------\n` +
                             `品項明細：\n${itemsDetail}` +
                             `------------------------------\n` +
-                            `💰 總金額：$${total} 元`;
+                            `💰 總金額：$${total} 元\n` +
+                            `------------------------------\n` +
+                            `📌 請直接點擊傳送此訊息給風鳥堂，收到店家回覆「已收到訂單」後才算接單成功喔！`;
 
             const encodedMsg = encodeURIComponent(lineMsg);
             const lineUrl = `https://line.me/R/oaMessage/@${LINE_OFFICIAL_ID}/?${encodedMsg}`;
