@@ -729,10 +729,10 @@
                 <button class="pay-tab-btn" id="btnTabJko" onclick="switchPayTab('jko')">街口支付</button>
             </div>
 
-            <!-- LINE Pay 付款區塊 -->
+            <!-- LINE Pay 付款區塊 (直達按鈕) -->
             <div class="qr-box" id="payBoxLinePay">
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.8rem;">
-                    點擊下方按鈕將開啟 LINE Pay，請在頁面中輸入上方顯示之金額點擊付款：
+                    點擊下方按鈕將開啟 LINE Pay，請輸入上方金額進行付款：
                 </p>
                 <a href="https://qrcodepay.line.me/qr/payment/BOjxDmAUQUtFfo9Of0%252Fxg8itSY90KZ6E5Ws%252BRp6EcM5ansUivida28vnpnvM%252FAcR" 
                    target="_blank" 
@@ -741,11 +741,12 @@
                 </a>
             </div>
 
-            <!-- 街口支付區塊 -->
+            <!-- 街口支付區塊 (靜態 QR Code 圖片) -->
             <div class="qr-box" id="payBoxJko" style="display: none;">
-                <p style="font-size: 0.85rem; font-weight: bold; color: var(--text-dark);">請掃描或長按圖片儲存 QR Code 付款</p>
+                <p style="font-size: 0.85rem; font-weight: bold; color: var(--text-dark);">請截圖或長按儲存下方 QR Code</p>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">開啟街口支付 App ➔ 點擊「掃描」選擇相冊圖片進行付款</p>
+                <!-- 此處已替換為您提供的街口圖片名稱 jkopay.jpg -->
                 <img src="jkopay.jpg" alt="街口支付 QR Code" class="qr-img">
-                <p style="font-size: 0.8rem; color: var(--text-muted);">請確認已付款完成，再點擊下方按鈕送出訂單</p>
             </div>
 
             <button class="btn-primary" id="submitOrderBtn" onclick="submitOrder()" style="margin-top: 1rem;">
