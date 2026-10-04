@@ -705,6 +705,27 @@
             <div id="cartItemsList"></div>
 
             <div style="border-top: 2px solid var(--border-color); padding-top: 1rem; margin-top: 1rem;">
+                
+                <!-- 新增：加購購物袋下拉選單 -->
+                <div style="margin-bottom: 0.8rem; background: #f8fafc; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                    <label style="font-size: 0.85rem; font-weight: bold; color: var(--text-dark); display: block; margin-bottom: 0.3rem;">
+                        🛍️ 加購購物袋（1~6杯裝）
+                    </label>
+                    <select id="bagQuantity" class="form-select" style="margin-bottom: 0;" onchange="updateCartTotalWithBag()">
+                        <option value="0">不需要購物袋 ($0)</option>
+                        <option value="1">1 個塑膠袋 (+$1)</option>
+                        <option value="2">2 個塑膠袋 (+$2)</option>
+                        <option value="3">3 個塑膠袋 (+$3)</option>
+                        <option value="4">4 個塑膠袋 (+$4)</option>
+                        <option value="5">5 個塑膠袋 (+$5)</option>
+                        <option value="6">6 個塑膠袋 (+$6)</option>
+                        <option value="7">7 個塑膠袋 (+$7)</option>
+                        <option value="8">8 個塑膠袋 (+$8)</option>
+                        <option value="9">9 個塑膠袋 (+$9)</option>
+                        <option value="10">10 個塑膠袋 (+$10)</option>
+                    </select>
+                </div>
+
                 <label style="font-size: 0.85rem; font-weight: bold;">預計取餐時間</label>
                 <select id="custPickupTime" class="form-select"></select>
 
@@ -742,11 +763,17 @@
                 <button class="pay-tab-btn" id="btnTabJko" onclick="switchPayTab('jko')">街口支付</button>
             </div>
 
-            <!-- LINE Pay 付款區塊 (直達按鈕) -->
+            <!-- LINE Pay 付款區塊 (包含一鍵複製金額) -->
             <div class="qr-box" id="payBoxLinePay">
-                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.8rem;">
-                    點擊下方按鈕將開啟 LINE Pay，請輸入上方金額進行付款：
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.6rem;">
+                    請先點擊複製金額，開啟 LINE Pay 後直接貼上：
                 </p>
+
+                <!-- 新增：一鍵複製金額按鈕 -->
+                <button onclick="copyTotalAmount()" style="background: #e2e8f0; color: #1e293b; border: 1px solid #cbd5e1; padding: 0.5rem 1rem; border-radius: 8px; font-weight: bold; margin-bottom: 0.8rem; cursor: pointer; width: 100%;">
+                    📋 點此複製金額 $<span id="copyBtnAmount">0</span>
+                </button>
+
                 <a href="https://qrcodepay.line.me/qr/payment/BOjxDmAUQUtFfo9Of0%252Fxg8itSY90KZ6E5Ws%252BRp6EcM5ansUivida28vnpnvM%252FAcR" 
                    target="_blank" 
                    style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; background-color: #06c755; color: white; padding: 0.85rem 1rem; border-radius: 12px; text-decoration: none; font-weight: bold; font-size: 1.05rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
@@ -827,48 +854,43 @@
             document.getElementById('cartBar').style.opacity = '0.5';
         }
 
-        /* 3. 取餐時間自動預留 15 分鐘製作時間（優化邊界判斷） */
-function generatePickupTimeOptions() {
-    const select = document.getElementById('custPickupTime');
-    select.innerHTML = '';
-    const now = new Date();
-    
-    // 加入 15 分鐘前置製作時間
-    const prepTimeMins = 15;
-    const currentMins = now.getHours() * 60 + now.getMinutes();
-    const earliestMins = currentMins + prepTimeMins;
-    
-    // 向上補齊到最近的 30 分鐘區間（例：12:05 -> 12:30）
-    let startMinutes = Math.ceil(earliestMins / 30) * 30;
-    
-    // 若預留時間算出來低於開店時間 11:00，則從 11:00 開始
-    if (startMinutes < 11 * 60) {
-        startMinutes = 11 * 60;
-    }
+        /* 取餐時間自動預留 15 分鐘製作時間 */
+        function generatePickupTimeOptions() {
+            const select = document.getElementById('custPickupTime');
+            select.innerHTML = '';
+            const now = new Date();
+            
+            const prepTimeMins = 15;
+            const currentMins = now.getHours() * 60 + now.getMinutes();
+            const earliestMins = currentMins + prepTimeMins;
+            
+            let startMinutes = Math.ceil(earliestMins / 30) * 30;
+            
+            if (startMinutes < 11 * 60) {
+                startMinutes = 11 * 60;
+            }
 
-    // 當前時間若已經太接近打烊（例：21:45 之後點餐，最快取餐會超過 22:00）
-    if (startMinutes > 22 * 60) {
-        const option = document.createElement('option');
-        option.value = '今日已發完/打烊';
-        option.innerText = '⚠️ 今日打烊前製作時間不足，暫不接單';
-        select.appendChild(option);
-        return;
-    }
+            if (startMinutes > 22 * 60) {
+                const option = document.createElement('option');
+                option.value = '今日已發完/打烊';
+                option.innerText = '⚠️ 今日打烊前製作時間不足，暫不接單';
+                select.appendChild(option);
+                return;
+            }
 
-    // 生成可選時段
-    while (startMinutes <= 22 * 60) {
-        const h = Math.floor(startMinutes / 60);
-        const m = startMinutes % 60;
-        const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-        
-        const option = document.createElement('option');
-        option.value = `${timeStr} 取餐`;
-        option.innerText = `${timeStr} 取餐`;
-        select.appendChild(option);
-        
-        startMinutes += 30;
-    }
-}
+            while (startMinutes <= 22 * 60) {
+                const h = Math.floor(startMinutes / 60);
+                const m = startMinutes % 60;
+                const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                
+                const option = document.createElement('option');
+                option.value = `${timeStr} 取餐`;
+                option.innerText = `${timeStr} 取餐`;
+                select.appendChild(option);
+                
+                startMinutes += 30;
+            }
+        }
 
         async function fetchMenuFromSheet() {
             try {
@@ -936,7 +958,7 @@ function generatePickupTimeOptions() {
                 menuData = Object.values(categoriesMap);
                 renderMenuNav();
                 renderMenu();
-                setupScrollspy(); // 載入後啟動滾動監聽
+                setupScrollspy();
             } catch (err) {
                 console.error("讀取試算表失敗，使用預設菜單", err);
                 loadDefaultMenu();
@@ -1162,9 +1184,23 @@ function generatePickupTimeOptions() {
             closeModal('itemModal');
         }
 
+        // 計算包含購物袋的總金額
+        function getCartTotalWithBag() {
+            const itemTotal = cart.reduce((sum, item) => sum + (item.finalPrice * item.qty), 0);
+            const bagQty = parseInt(document.getElementById('bagQuantity')?.value || 0, 10);
+            const bagPrice = 1; // 一個塑膠袋 $1
+            return itemTotal + (bagQty * bagPrice);
+        }
+
+        // 當變動購物袋數量時同步更新購物車總金額 display
+        function updateCartTotalWithBag() {
+            const finalTotal = getCartTotalWithBag();
+            document.getElementById('cartTotal').innerText = `$${finalTotal}`;
+        }
+
         function updateCart() {
             const count = cart.reduce((sum, item) => sum + item.qty, 0);
-            const total = cart.reduce((sum, item) => sum + (item.finalPrice * item.qty), 0);
+            const total = getCartTotalWithBag();
 
             document.getElementById('cartCount').innerText = count;
             document.getElementById('cartTotal').innerText = `$${total}`;
@@ -1234,7 +1270,7 @@ function generatePickupTimeOptions() {
                 return;
             }
 
-            const total = cart.reduce((sum, item) => sum + (item.finalPrice * item.qty), 0);
+            const total = getCartTotalWithBag();
 
             // 檢查是否達到滿 $300 贈品門檻
             if (total >= 300) {
@@ -1255,14 +1291,25 @@ function generatePickupTimeOptions() {
 
         function confirmGiftSelection() {
             closeModal('giftModal');
-            const total = cart.reduce((sum, item) => sum + (item.finalPrice * item.qty), 0);
+            const total = getCartTotalWithBag();
             showPayModal(total);
         }
 
-        /* 2. 動態顯示總金額防呆警語 */
+        /* 複製金額功能 */
+        function copyTotalAmount() {
+            const totalText = document.getElementById('payModalTotal').innerText.replace('$', '');
+            navigator.clipboard.writeText(totalText).then(() => {
+                alert(`已複製金額：${totalText} 元！開啟 LINE Pay 後貼上即可。`);
+            }).catch(err => {
+                alert(`複製失敗，請手動輸入金額：${totalText} 元`);
+            });
+        }
+
+        /* 動態顯示總金額與複製按鈕金額 */
         function showPayModal(total) {
             document.getElementById('payModalTotal').innerText = `$${total}`;
             document.getElementById('warningTotalAmount').innerText = `$${total}`;
+            document.getElementById('copyBtnAmount').innerText = total;
             closeModal('cartModal');
             document.getElementById('payModal').classList.add('active');
         }
@@ -1329,10 +1376,25 @@ function generatePickupTimeOptions() {
             const name = document.getElementById('custName').value.trim();
             const phone = document.getElementById('custPhone').value.trim();
             const note = document.getElementById('custNote').value.trim();
-            const total = cart.reduce((sum, item) => sum + (item.finalPrice * item.qty), 0);
+            
+            const bagQty = parseInt(document.getElementById('bagQuantity').value || 0, 10);
+            const total = getCartTotalWithBag();
+
+            let finalCartForSubmit = [...cart];
+            
+            // 若有加購購物袋，將購物袋寫入提交明細中
+            if (bagQty > 0) {
+                finalCartForSubmit.push({
+                    name: "🛍️ 加購塑膠袋 (1~6杯裝)",
+                    finalPrice: 1,
+                    sweetness: "-",
+                    ice: "-",
+                    toppings: [],
+                    qty: bagQty
+                });
+            }
 
             // 若滿 300 元，自動寫入贈品
-            let finalCartForSubmit = [...cart];
             if (total >= 300) {
                 finalCartForSubmit.push({
                     name: "🎁 [滿額贈] 招牌風鳥茶",
@@ -1361,11 +1423,16 @@ function generatePickupTimeOptions() {
             // 1. 存入 LocalStorage 供「一鍵再點」
             saveLastOrderToStorage(cart);
 
-            // 2. 組裝 LINE 訊息內容（4. 加入溫馨接單提醒）
+            // 2. 組裝 LINE 訊息內容
             let itemsDetail = '';
             finalCartForSubmit.forEach(item => {
                 let toppingsText = (item.toppings && item.toppings.length > 0) ? ` + ${item.toppings.map(t=>t.name).join(', ')}` : '';
-                itemsDetail += `• ${item.name} x${item.qty}\n  (${item.sweetness} / ${item.ice}${toppingsText}) - $${item.finalPrice * item.qty}\n`;
+                
+                if (item.name.includes('購物袋')) {
+                    itemsDetail += `• ${item.name} x${item.qty} - $${item.finalPrice * item.qty}\n`;
+                } else {
+                    itemsDetail += `• ${item.name} x${item.qty}\n  (${item.sweetness} / ${item.ice}${toppingsText}) - $${item.finalPrice * item.qty}\n`;
+                }
             });
 
             const lineMsg = `📋 【風鳥堂 - 線上點餐單】\n` +
@@ -1402,6 +1469,7 @@ function generatePickupTimeOptions() {
 
             // 4. 重置購物車與按鈕
             cart = [];
+            document.getElementById('bagQuantity').value = "0"; // 重置購物袋數量
             updateCart();
             closeModal('payModal');
             btn.disabled = false;
