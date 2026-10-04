@@ -833,7 +833,7 @@
 
             const now = new Date();
             const currentTimeVal = now.getHours() * 60 + now.getMinutes();
-            if (currentTimeVal < 11 * 60 || currentTimeVal > 22 * 60) {
+            if (currentTimeVal < 11 * 60 || currentTimeVal > 23 * 50) {
                 isStoreOpen = false;
                 document.getElementById('closedMsg').innerText = '目前為非營業時間（營業時間為 11:00 ~ 22:00），暫不開放線上點餐！';
                 document.getElementById('closedOverlay').style.display = 'block';
