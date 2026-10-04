@@ -517,17 +517,6 @@
             color: var(--text-muted);
         }
 
-        .gift-badge-item {
-            background: #fee2e2;
-            color: #b91c1c;
-            font-size: 0.75rem;
-            padding: 0.1rem 0.4rem;
-            border-radius: 4px;
-            font-weight: bold;
-            margin-left: 0.3rem;
-        }
-
-        /* 提醒警語外觀 */
         .pay-warning-box {
             background-color: #fef2f2;
             border: 1px solid #fecaca;
@@ -553,6 +542,11 @@
     <header>
         <div class="header-title">風鳥堂林口中山店</div>
         <div class="header-subtitle">官方 LINE ID: @694hwlae ‧ 營業時間 11:00 ~ 22:00  地址：新北市林口區中山路247號 電話：02-26011950 </div>
+        
+        <!-- 新增：測試模式切換按鈕 -->
+        <button id="testModeBtn" onclick="toggleTestMode()" style="margin-top: 10px; background: #f59e0b; color: white; border: none; padding: 6px 16px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.85rem; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+            🧪 啟用測試模式 (強制開啟點餐)
+        </button>
     </header>
 
     <div class="container">
@@ -706,7 +700,6 @@
 
             <div style="border-top: 2px solid var(--border-color); padding-top: 1rem; margin-top: 1rem;">
                 
-                <!-- 新增：加購購物袋下拉選單 -->
                 <div style="margin-bottom: 0.8rem; background: #f8fafc; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-color);">
                     <label style="font-size: 0.85rem; font-weight: bold; color: var(--text-dark); display: block; margin-bottom: 0.3rem;">
                         🛍️ 加購購物袋（1~6杯裝）
@@ -763,13 +756,12 @@
                 <button class="pay-tab-btn" id="btnTabJko" onclick="switchPayTab('jko')">街口支付</button>
             </div>
 
-            <!-- LINE Pay 付款區塊 (包含一鍵複製金額) -->
+            <!-- LINE Pay 付款區塊 -->
             <div class="qr-box" id="payBoxLinePay">
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.6rem;">
                     請先點擊複製金額，開啟 LINE Pay 後直接貼上：
                 </p>
 
-                <!-- 新增：一鍵複製金額按鈕 -->
                 <button onclick="copyTotalAmount()" style="background: #e2e8f0; color: #1e293b; border: 1px solid #cbd5e1; padding: 0.5rem 1rem; border-radius: 8px; font-weight: bold; margin-bottom: 0.8rem; cursor: pointer; width: 100%;">
                     📋 點此複製金額 $<span id="copyBtnAmount">0</span>
                 </button>
@@ -781,7 +773,7 @@
                 </a>
             </div>
 
-            <!-- 街口支付區塊 (靜態 QR Code 圖片與明確引導) -->
+            <!-- 街口支付區塊 -->
             <div class="qr-box" id="payBoxJko" style="display: none;">
                 <p style="font-size: 0.85rem; font-weight: bold; color: var(--text-dark);">請長按圖片儲存，或截圖下方 QR Code</p>
                 <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">開啟街口支付 App ➔ 點擊「掃描」選擇相冊圖片進行付款</p>
@@ -791,7 +783,6 @@
                 <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">（提示：點擊上方圖片可在新頁面開啟大圖便利長按儲存）</p>
             </div>
 
-            <!-- 提醒確認金額警語 -->
             <div class="pay-warning-box">
                 ⚠️ 請確認輸入金額與訂單金額（<span id="warningTotalAmount">$0</span>）一致
             </div>
@@ -821,19 +812,46 @@
         let modalQty = 1;
         let selectedPayMethod = 'LINE Pay';
         
-        // 滿額贈預設選取
         let freeGiftSweetness = '半糖(5分)';
         let freeGiftIce = '少冰';
 
         let isStoreOpen = true;
         let isManualClosed = false;
+        let isTestMode = false; // 測試模式狀態
+
+        // 測試模式開關
+        function toggleTestMode() {
+            isTestMode = !isTestMode;
+            const btn = document.getElementById('testModeBtn');
+            if (isTestMode) {
+                btn.innerText = '✅ 測試模式運作中 (已忽略營業時間)';
+                btn.style.background = '#10b981';
+                isStoreOpen = true;
+                document.getElementById('closedOverlay').style.display = 'none';
+                document.getElementById('cartBar').style.opacity = '1';
+                alert('已開啟測試模式！現在即使非營業時間也可以自由點餐與測試結帳流程。');
+            } else {
+                btn.innerText = '🧪 啟用測試模式 (強制開啟點餐)';
+                btn.style.background = '#f59e0b';
+                checkBusinessHours();
+                alert('已關閉測試模式，恢復正常營業時間判定。');
+            }
+        }
 
         function checkBusinessHours() {
+            // 如果開啟了測試模式，不鎖定點餐
+            if (isTestMode) {
+                isStoreOpen = true;
+                document.getElementById('closedOverlay').style.display = 'none';
+                document.getElementById('cartBar').style.opacity = '1';
+                return;
+            }
+
             if (isManualClosed) return;
 
             const now = new Date();
             const currentTimeVal = now.getHours() * 60 + now.getMinutes();
-            if (currentTimeVal < 11 * 60 || currentTimeVal > 23 * 50) {
+            if (currentTimeVal < 11 * 60 || currentTimeVal > 22 * 60) {
                 isStoreOpen = false;
                 document.getElementById('closedMsg').innerText = '目前為非營業時間（營業時間為 11:00 ~ 22:00），暫不開放線上點餐！';
                 document.getElementById('closedOverlay').style.display = 'block';
@@ -847,6 +865,7 @@
         }
 
         function setManualClosed(reasonMsg) {
+            if (isTestMode) return; // 測試模式下忽略遠端手動關閉
             isStoreOpen = false;
             isManualClosed = true;
             document.getElementById('closedMsg').innerText = reasonMsg || '本店目前暫停線上點餐服務，造成不便敬請見諒！';
@@ -854,7 +873,6 @@
             document.getElementById('cartBar').style.opacity = '0.5';
         }
 
-        /* 取餐時間自動預留 15 分鐘製作時間 */
         function generatePickupTimeOptions() {
             const select = document.getElementById('custPickupTime');
             select.innerHTML = '';
@@ -870,10 +888,19 @@
                 startMinutes = 11 * 60;
             }
 
-            if (startMinutes > 22 * 60) {
+            if (startMinutes > 22 * 60 && !isTestMode) {
                 const option = document.createElement('option');
                 option.value = '今日已發完/打烊';
                 option.innerText = '⚠️ 今日打烊前製作時間不足，暫不接單';
+                select.appendChild(option);
+                return;
+            }
+
+            // 若在測試模式下且過營業時間，提供預設測試時間
+            if (isTestMode && startMinutes > 22 * 60) {
+                const option = document.createElement('option');
+                option.value = '測試時間 (打烊測試)';
+                option.innerText = '🧪 測試時間 (打烊測試中)';
                 select.appendChild(option);
                 return;
             }
@@ -1019,7 +1046,7 @@
                 let itemsHtml = cat.items.map(item => {
                     const isSoldOut = item.status === '售完';
                     return `
-                        <div class="menu-card ${isSoldOut ? 'sold-out' : ''}" onclick="${isSoldOut || !isStoreOpen ? '' : `openItemModal('${item.name}',${item.price})`}">
+                        <div class="menu-card ${isSoldOut ? 'sold-out' : ''}" onclick="${isSoldOut || (!isStoreOpen && !isTestMode) ? '' : `openItemModal('${item.name}',${item.price})`}">
                             <div class="item-info">
                                 <div class="item-name">${item.name} ${isSoldOut ? '<span class="sold-badge">已售完</span>' : ''}</div>
                                 <div class="item-desc">${item.desc}</div>
@@ -1038,7 +1065,6 @@
             });
         }
 
-        /* 滾動聯動高亮 (Scrollspy) */
         function setupScrollspy() {
             window.addEventListener('scroll', () => {
                 const sections = document.querySelectorAll('.menu-section');
@@ -1099,7 +1125,7 @@
         }
 
         function openItemModal(name, price) {
-            if (!isStoreOpen) {
+            if (!isStoreOpen && !isTestMode) {
                 alert('目前暫不開放線上點餐喔！');
                 return;
             }
@@ -1184,15 +1210,13 @@
             closeModal('itemModal');
         }
 
-        // 計算包含購物袋的總金額
         function getCartTotalWithBag() {
             const itemTotal = cart.reduce((sum, item) => sum + (item.finalPrice * item.qty), 0);
             const bagQty = parseInt(document.getElementById('bagQuantity')?.value || 0, 10);
-            const bagPrice = 1; // 一個塑膠袋 $1
+            const bagPrice = 1;
             return itemTotal + (bagQty * bagPrice);
         }
 
-        // 當變動購物袋數量時同步更新購物車總金額 display
         function updateCartTotalWithBag() {
             const finalTotal = getCartTotalWithBag();
             document.getElementById('cartTotal').innerText = `$${finalTotal}`;
@@ -1207,7 +1231,7 @@
         }
 
         function openCartModal() {
-            if (!isStoreOpen) {
+            if (!isStoreOpen && !isTestMode) {
                 alert('目前暫不開放線上點餐喔！');
                 return;
             }
@@ -1272,7 +1296,6 @@
 
             const total = getCartTotalWithBag();
 
-            // 檢查是否達到滿 $300 贈品門檻
             if (total >= 300) {
                 closeModal('cartModal');
                 document.getElementById('giftModal').classList.add('active');
@@ -1295,7 +1318,6 @@
             showPayModal(total);
         }
 
-        /* 複製金額功能 */
         function copyTotalAmount() {
             const totalText = document.getElementById('payModalTotal').innerText.replace('$', '');
             navigator.clipboard.writeText(totalText).then(() => {
@@ -1305,7 +1327,6 @@
             });
         }
 
-        /* 動態顯示總金額與複製按鈕金額 */
         function showPayModal(total) {
             document.getElementById('payModalTotal').innerText = `$${total}`;
             document.getElementById('warningTotalAmount').innerText = `$${total}`;
@@ -1332,7 +1353,6 @@
             }
         }
 
-        /* LocalStorage 一鍵再點處理 */
         function saveLastOrderToStorage(finalCart) {
             try {
                 localStorage.setItem('feng_last_order', JSON.stringify(finalCart));
@@ -1382,7 +1402,6 @@
 
             let finalCartForSubmit = [...cart];
             
-            // 若有加購購物袋，將購物袋寫入提交明細中
             if (bagQty > 0) {
                 finalCartForSubmit.push({
                     name: "🛍️ 加購塑膠袋 (1~6杯裝)",
@@ -1394,7 +1413,6 @@
                 });
             }
 
-            // 若滿 300 元，自動寫入贈品
             if (total >= 300) {
                 finalCartForSubmit.push({
                     name: "🎁 [滿額贈] 招牌風鳥茶",
@@ -1420,10 +1438,8 @@
             btn.disabled = true;
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 正在傳送訂單...`;
 
-            // 1. 存入 LocalStorage 供「一鍵再點」
             saveLastOrderToStorage(cart);
 
-            // 2. 組裝 LINE 訊息內容
             let itemsDetail = '';
             finalCartForSubmit.forEach(item => {
                 let toppingsText = (item.toppings && item.toppings.length > 0) ? ` + ${item.toppings.map(t=>t.name).join(', ')}` : '';
@@ -1451,7 +1467,6 @@
             const encodedMsg = encodeURIComponent(lineMsg);
             const lineUrl = `https://line.me/R/oaMessage/@${LINE_OFFICIAL_ID}/?${encodedMsg}`;
 
-            // 3. 背景寫入 GAS 試算表（設定 2.5 秒超時，無論 GAS 成功與否都強制喚起 LINE）
             try {
                 const fetchPromise = fetch(GAS_WEB_APP_URL, {
                     method: 'POST',
@@ -1467,15 +1482,13 @@
                 console.warn('GAS 寫入背景異常，仍繼續開啟 LINE:', e);
             }
 
-            // 4. 重置購物車與按鈕
             cart = [];
-            document.getElementById('bagQuantity').value = "0"; // 重置購物袋數量
+            document.getElementById('bagQuantity').value = "0";
             updateCart();
             closeModal('payModal');
             btn.disabled = false;
             btn.innerHTML = `<i class="fa-brands fa-line" style="font-size: 1.3rem;"></i> 完成付款，傳送訂單至 LINE`;
 
-            // 5. 開啟 LINE
             window.open(lineUrl, '_self');
         }
 
