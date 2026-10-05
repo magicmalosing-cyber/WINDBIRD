@@ -272,7 +272,7 @@
         .modal-backdrop {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.6);
+            background: rgba(0, 0, 0, 0.65);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -435,6 +435,23 @@
             cursor: not-allowed !important;
         }
 
+        /* 超搶眼的最終送單按鈕 */
+        .btn-submit-highlight {
+            background: linear-gradient(135deg, #05b34c 0%, #028a3a 100%);
+            color: white;
+            font-size: 1.1rem;
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(6, 199, 85, 0.4);
+            animation: pulse-border 2s infinite;
+        }
+
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 0 0 rgba(6, 199, 85, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(6, 199, 85, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(6, 199, 85, 0); }
+        }
+
         .cart-item {
             display: flex;
             justify-content: space-between;
@@ -519,17 +536,18 @@
             color: var(--text-muted);
         }
 
-        /* 提醒警語外觀 */
+        /* 強烈提醒警語外觀 */
         .pay-warning-box {
             background-color: #fef2f2;
-            border: 1px solid #fecaca;
-            color: #dc2626;
-            padding: 0.6rem 0.8rem;
-            border-radius: 8px;
-            font-size: 0.85rem;
+            border: 2px solid #ef4444;
+            color: #b91c1c;
+            padding: 0.8rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
             font-weight: bold;
             margin-top: 1rem;
             text-align: center;
+            line-height: 1.4;
         }
     </style>
 </head>
@@ -700,7 +718,7 @@
                 
                 <div style="margin-bottom: 0.8rem; background: #f8fafc; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-color);">
                     <label style="font-size: 0.85rem; font-weight: bold; color: var(--text-dark); display: block; margin-bottom: 0.3rem;">
-                        🛍️ 加購購物袋（1~6杯裝）
+                        🛍️️ 加購購物袋（1~6杯裝）
                     </label>
                     <select id="bagQuantity" class="form-select" style="margin-bottom: 0;" onchange="updateCartTotalWithBag()">
                         <option value="0">不需要購物袋 ($0)</option>
@@ -736,6 +754,27 @@
         </div>
     </div>
 
+    <!-- 防漏單提醒 Modal (前往支付 App 前強效引導) -->
+    <div class="modal-backdrop" id="noticeModal" style="z-index: 150;">
+        <div class="modal-card" style="text-align: center;">
+            <div style="font-size: 3rem; color: #d97706; margin-bottom: 0.5rem;">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 style="font-size: 1.25rem; font-weight: 800; color: #991b1b; margin-bottom: 0.8rem;">
+                ⚠️ 訂購防漏單重要提醒
+            </h3>
+            <div style="text-align: left; background: #fffbe0; border: 1px solid #fde047; padding: 1rem; border-radius: 10px; font-size: 0.95rem; line-height: 1.6; color: #713f12; margin-bottom: 1.2rem;">
+                <strong>付款完成後請特別注意：</strong><br>
+                1. 於付款 App 結帳完畢後，請**務必切回本網頁**。<br>
+                2. 點擊最下方的 **「發送訂單至 LINE」** 按鈕。<br>
+                3. 將訂單明細**傳送至風鳥堂官方 LINE**，店家收到才算訂餐成功喔！
+            </div>
+            <button class="btn-primary" style="background-color: #1e3a8a; font-size: 1rem;" onclick="proceedToPayApp()">
+                我知道了，前往付款 ➔
+            </button>
+        </div>
+    </div>
+
     <!-- 付款碼彈窗 Modal -->
     <div class="modal-backdrop" id="payModal">
         <div class="modal-card">
@@ -764,8 +803,8 @@
                     📋 點此複製金額 $<span id="copyBtnAmount">0</span>
                 </button>
 
-                <a href="https://qrcodepay.line.me/qr/payment/BOjxDmAUQUtFfo9Of0%252Fxg8itSY90KZ6E5Ws%252BRp6EcM5ansUivida28vnpnvM%252FAcR" 
-                   target="_blank" 
+                <a href="javascript:void(0)" 
+                   onclick="triggerPayAppNotice('https://qrcodepay.line.me/qr/payment/BOjxDmAUQUtFfo9Of0%252Fxg8itSY90KZ6E5Ws%252BRp6EcM5ansUivida28vnpnvM%252FAcR')" 
                    style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; background-color: #06c755; color: white; padding: 0.85rem 1rem; border-radius: 12px; text-decoration: none; font-weight: bold; font-size: 1.05rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                     <i class="fa-brands fa-line" style="font-size: 1.5rem;"></i> 開啟 LINE Pay 輸入金額結帳
                 </a>
@@ -782,11 +821,12 @@
             </div>
 
             <div class="pay-warning-box">
-                ⚠️ 請確認輸入金額與訂單金額（<span id="warningTotalAmount">$0</span>）一致
+                🚨 <strong>完成付款後，請務必點擊下方按鈕送出訂單！</strong><br>
+                金額應為：<span id="warningTotalAmount" style="color: #d97706; font-size: 1.1rem; text-decoration: underline;">$0</span>
             </div>
 
-            <button class="btn-primary" id="submitOrderBtn" onclick="submitOrder()" style="margin-top: 1rem;">
-                <i class="fa-brands fa-line" style="font-size: 1.3rem;"></i> 完成付款，傳送訂單至 LINE
+            <button class="btn-primary btn-submit-highlight" id="submitOrderBtn" onclick="submitOrder()" style="margin-top: 1rem;">
+                <i class="fa-brands fa-line" style="font-size: 1.4rem;"></i> 【必點】我已付款，點此發送訂單至 LINE ➔
             </button>
         </div>
     </div>
@@ -819,6 +859,7 @@
 
         let titleClickCount = 0;
         let titleClickTimer = null;
+        let pendingPayUrl = '';
 
         // 連續點擊標題 5 下切換測試模式
         function handleTitleClick() {
@@ -1405,6 +1446,20 @@
             }
         }
 
+        // 觸發防漏單跳窗
+        function triggerPayAppNotice(url) {
+            pendingPayUrl = url;
+            document.getElementById('noticeModal').classList.add('active');
+        }
+
+        // 顧客確認引導後才開啟支付 App
+        function proceedToPayApp() {
+            closeModal('noticeModal');
+            if (pendingPayUrl) {
+                window.open(pendingPayUrl, '_blank');
+            }
+        }
+
         function saveLastOrderToStorage(finalCart) {
             try {
                 localStorage.setItem('feng_last_order', JSON.stringify(finalCart));
@@ -1547,7 +1602,7 @@
             updateCart();
             closeModal('payModal');
             btn.disabled = false;
-            btn.innerHTML = `<i class="fa-brands fa-line" style="font-size: 1.3rem;"></i> 完成付款，傳送訂單至 LINE`;
+            btn.innerHTML = `<i class="fa-brands fa-line" style="font-size: 1.4rem;"></i> 【必點】我已付款，點此發送訂單至 LINE ➔`;
 
             window.open(lineUrl, '_self');
         }
