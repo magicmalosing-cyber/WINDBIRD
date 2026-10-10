@@ -1212,29 +1212,55 @@
         }
 
         function openItemModal(name, price) {
-            if (!isStoreOpen) {
-                alert('目前為非營業時間（11:00 ~ 22:00），暫不開放點餐喔！');
-                return;
-            }
+    if (!isStoreOpen) {
+        alert('目前為非營業時間（11:00 ~ 22:00），暫不開放點餐喔！');
+        return;
+    }
 
-            currentItem = { name, price };
-            selectedSweetness = '多糖';
-            sweetnessPrice = 0;
-            selectedIce = '多冰';
-            selectedToppings = [];
-            modalQty = 1;
+    currentItem = { name, price };
+    selectedSweetness = '多糖';
+    sweetnessPrice = 0;
+    selectedIce = '多冰';
+    selectedToppings = [];
+    modalQty = 1;
 
-            document.getElementById('modalItemName').innerText = name;
-            document.getElementById('modalItemPrice').innerText = `$${price}`;
-            document.getElementById('modalItemQty').innerText = modalQty;
+    document.getElementById('modalItemName').innerText = name;
+    document.getElementById('modalItemPrice').innerText = `$${price}`;
+    document.getElementById('modalItemQty').innerText = modalQty;
 
-            resetChipSelection('sweetnessOptions', 0);
-            resetChipSelection('iceOptions', 0);
+    const sweetnessOptionsContainer = document.getElementById('sweetnessOptions');
+    
+    // 檢查品項名稱是否包含「固定」、「冬瓜」等關鍵字（您可以自行增減關鍵字）
+    if (name.includes('固定') || name.includes('冬瓜') || name.includes('甜度固定')) {
+        selectedSweetness = '此品項甜度固定，無法調整';
+        sweetnessOptionsContainer.innerHTML = `
+            <div class="option-chip selected" style="background-color: var(--accent); color: white; width: 100%; text-align: center; cursor: default;">
+                🍯 ${name}：甜度固定，無法調整
+            </div>
+        `;
+    } else {
+        // 一般飲料，顯示完整的甜度選項
+        sweetnessOptionsContainer.innerHTML = `
+            <div class="option-chip selected" onclick="selectOption(this, 'sweetness', 0)">多糖</div>
+            <div class="option-chip" onclick="selectOption(this, 'sweetness', 0)">正常糖</div>
+            <div class="option-chip" onclick="selectOption(this, 'sweetness', 0)">少糖(7分)</div>
+            <div class="option-chip" onclick="selectOption(this, 'sweetness', 0)">半糖(5分)</div>
+            <div class="option-chip" onclick="selectOption(this, 'sweetness', 0)">微糖(3分)</div>
+            <div class="option-chip" onclick="selectOption(this, 'sweetness', 0)">二分糖(2分)</div>
+            <div class="option-chip" onclick="selectOption(this, 'sweetness', 0)">一分糖(1分)</div>
+            <div class="option-chip" onclick="selectOption(this, 'sweetness', 0)">無糖</div>
+            <div class="option-chip" onclick="selectOption(this, 'sweetness', 0)">赤藻糖微糖</div>
+            <div class="option-chip" onclick="selectOption(this, 'sweetness', 5)">赤藻糖半糖 (+5)</div>
+            <div class="option-chip" onclick="selectOption(this, 'sweetness', 10)">赤藻糖全糖 (+10)</div>
+        `;
+        resetChipSelection('sweetnessOptions', 0);
+    }
 
-            renderToppingsModal();
+    resetChipSelection('iceOptions', 0);
+    renderToppingsModal();
 
-            document.getElementById('itemModal').classList.add('active');
-        }
+    document.getElementById('itemModal').classList.add('active');
+}
 
         function resetChipSelection(groupId, defaultIdx) {
             const chips = document.querySelectorAll(`#${groupId} .option-chip`);
