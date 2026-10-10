@@ -566,7 +566,7 @@
     </header>
 
     <div class="container">
-        <!-- 一鍵再點快速卡片 (預設隱藏) -->
+        <!-- 一鍵再點快速回購區塊 -->
         <div class="reorder-card" id="reorderCard" style="display: none;">
             <div>
                 <div class="reorder-title"><i class="fa-solid fa-rotate-left"></i> 一鍵快速再點</div>
@@ -718,7 +718,7 @@
                 
                 <div style="margin-bottom: 0.8rem; background: #f8fafc; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-color);">
                     <label style="font-size: 0.85rem; font-weight: bold; color: var(--text-dark); display: block; margin-bottom: 0.3rem;">
-                        🛍️️ 加購購物袋（1~6杯裝）
+                        🛍 加購購物袋（1~6杯裝）
                     </label>
                     <select id="bagQuantity" class="form-select" style="margin-bottom: 0;" onchange="updateCartTotalWithBag()">
                         <option value="0">不需要購物袋 ($0)</option>
@@ -1212,55 +1212,89 @@
         }
 
         function openItemModal(name, price) {
-    if (!isStoreOpen) {
-        alert('目前為非營業時間（11:00 ~ 22:00），暫不開放點餐喔！');
-        return;
-    }
+            if (!isStoreOpen) {
+                alert('目前為非營業時間（11:00 ~ 22:00），暫不開放點餐喔！');
+                return;
+            }
 
-    currentItem = { name, price };
-    selectedSweetness = '多糖';
-    sweetnessPrice = 0;
-    selectedIce = '多冰';
-    selectedToppings = [];
-    modalQty = 1;
+            currentItem = { name, price };
+            selectedSweetness = '多糖';
+            sweetnessPrice = 0;
+            selectedIce = '多冰';
+            selectedToppings = [];
+            modalQty = 1;
 
-    document.getElementById('modalItemName').innerText = name;
-    document.getElementById('modalItemPrice').innerText = `$${price}`;
-    document.getElementById('modalItemQty').innerText = modalQty;
+            document.getElementById('modalItemName').innerText = name;
+            document.getElementById('modalItemPrice').innerText = `$${price}`;
+            document.getElementById('modalItemQty').innerText = modalQty;
 
-    const sweetnessOptionsContainer = document.getElementById('sweetnessOptions');
-    
-    // 檢查品項名稱是否包含「固定」、「冬瓜」等關鍵字（您可以自行增減關鍵字）
-    if (name.includes('固定') || name.includes('冬瓜') || name.includes('甜度固定')) {
-        selectedSweetness = '此品項甜度固定，無法調整';
-        sweetnessOptionsContainer.innerHTML = `
-            <div class="option-chip selected" style="background-color: var(--accent); color: white; width: 100%; text-align: center; cursor: default;">
-                🍯 ${name}：甜度固定，無法調整
-            </div>
-        `;
-    } else {
-        // 一般飲料，顯示完整的甜度選項
-        sweetnessOptionsContainer.innerHTML = `
-            <div class="option-chip selected" onclick="selectOption(this, 'sweetness', 0)">多糖</div>
-            <div class="option-chip" onclick="selectOption(this, 'sweetness', 0)">正常糖</div>
-            <div class="option-chip" onclick="selectOption(this, 'sweetness', 0)">少糖(7分)</div>
-            <div class="option-chip" onclick="selectOption(this, 'sweetness', 0)">半糖(5分)</div>
-            <div class="option-chip" onclick="selectOption(this, 'sweetness', 0)">微糖(3分)</div>
-            <div class="option-chip" onclick="selectOption(this, 'sweetness', 0)">二分糖(2分)</div>
-            <div class="option-chip" onclick="selectOption(this, 'sweetness', 0)">一分糖(1分)</div>
-            <div class="option-chip" onclick="selectOption(this, 'sweetness', 0)">無糖</div>
-            <div class="option-chip" onclick="selectOption(this, 'sweetness', 0)">赤藻糖微糖</div>
-            <div class="option-chip" onclick="selectOption(this, 'sweetness', 5)">赤藻糖半糖 (+5)</div>
-            <div class="option-chip" onclick="selectOption(this, 'sweetness', 10)">赤藻糖全糖 (+10)</div>
-        `;
-        resetChipSelection('sweetnessOptions', 0);
-    }
+            const sweetnessOptionsContainer = document.getElementById('sweetnessOptions');
+            const iceOptionsContainer = document.getElementById('iceOptions');
 
-    resetChipSelection('iceOptions', 0);
-    renderToppingsModal();
+            // 1. 處理甜度固定（若名稱包含「固定」、「冬瓜」、「甜度固定」）
+            if (name.includes('固定') || name.includes('冬瓜') || name.includes('甜度固定')) {
+                selectedSweetness = '此品項甜度固定，無法調整';
+                sweetnessOptionsContainer.innerHTML = `
+                    <div class="option-chip selected" style="background-color: var(--accent); color: white; width: 100%; text-align: center; cursor: default;">
+                        🍯 ${name}：甜度固定，無法調整
+                    </div>
+                `;
+            } else {
+                sweetnessOptionsContainer.innerHTML = `
+                    <div class="option-chip selected" onclick="selectOption(this, 'sweetness', 0)">多糖</div>
+                    <div class="option-chip" onclick="selectOption(this, 'sweetness', 0)">正常糖</div>
+                    <div class="option-chip" onclick="selectOption(this, 'sweetness', 0)">少糖(7分)</div>
+                    <div class="option-chip" onclick="selectOption(this, 'sweetness', 0)">半糖(5分)</div>
+                    <div class="option-chip" onclick="selectOption(this, 'sweetness', 0)">微糖(3分)</div>
+                    <div class="option-chip" onclick="selectOption(this, 'sweetness', 0)">二分糖(2分)</div>
+                    <div class="option-chip" onclick="selectOption(this, 'sweetness', 0)">一分糖(1分)</div>
+                    <div class="option-chip" onclick="selectOption(this, 'sweetness', 0)">無糖</div>
+                    <div class="option-chip" onclick="selectOption(this, 'sweetness', 0)">赤藻糖微糖</div>
+                    <div class="option-chip" onclick="selectOption(this, 'sweetness', 5)">赤藻糖半糖 (+5)</div>
+                    <div class="option-chip" onclick="selectOption(this, 'sweetness', 10)">赤藻糖全糖 (+10)</div>
+                `;
+                resetChipSelection('sweetnessOptions', 0);
+            }
 
-    document.getElementById('itemModal').classList.add('active');
-}
+            // 2. 處理限正常冰量（若名稱包含「限正常冰」、「固定冰量」、「冰量固定」）
+            if (name.includes('限正常冰') || name.includes('固定冰量') || name.includes('冰量固定')) {
+                selectedIce = '正常冰';
+                iceOptionsContainer.innerHTML = `
+                    <div class="option-chip selected" style="background-color: var(--accent); color: white; width: 100%; text-align: center; cursor: default;">
+                        🧊 冰量固定：正常冰
+                    </div>
+                `;
+            } 
+            // 3. 處理不能溫熱（若名稱包含「不能溫熱」、「限冰」、「冰品」）
+            else if (name.includes('不能溫熱') || name.includes('限冰') || name.includes('冰品')) {
+                selectedIce = '正常冰';
+                iceOptionsContainer.innerHTML = `
+                    <div class="option-chip selected" onclick="selectOption(this, 'ice', 0)">正常冰</div>
+                    <div class="option-chip" onclick="selectOption(this, 'ice', 0)">少冰</div>
+                    <div class="option-chip" onclick="selectOption(this, 'ice', 0)">微冰</div>
+                    <div class="option-chip" onclick="selectOption(this, 'ice', 0)">去冰</div>
+                    <div class="option-chip" onclick="selectOption(this, 'ice', 0)">常溫</div>
+                `;
+                resetChipSelection('iceOptions', 0);
+            } 
+            // 4. 一般飲料，顯示完整包含溫熱的選項
+            else {
+                selectedIce = '多冰';
+                iceOptionsContainer.innerHTML = `
+                    <div class="option-chip selected" onclick="selectOption(this, 'ice', 0)">多冰</div>
+                    <div class="option-chip" onclick="selectOption(this, 'ice', 0)">正常冰</div>
+                    <div class="option-chip" onclick="selectOption(this, 'ice', 0)">少冰</div>
+                    <div class="option-chip" onclick="selectOption(this, 'ice', 0)">微冰</div>
+                    <div class="option-chip" onclick="selectOption(this, 'ice', 0)">去冰</div>
+                    <div class="option-chip" onclick="selectOption(this, 'ice', 0)">常溫</div>
+                    <div class="option-chip" onclick="selectOption(this, 'ice', 0)">溫熱</div>
+                `;
+                resetChipSelection('iceOptions', 0);
+            }
+
+            renderToppingsModal();
+            document.getElementById('itemModal').classList.add('active');
+        }
 
         function resetChipSelection(groupId, defaultIdx) {
             const chips = document.querySelectorAll(`#${groupId} .option-chip`);
@@ -1427,217 +1461,4 @@
             const parent = el.parentElement;
             parent.querySelectorAll('.option-chip').forEach(c => c.classList.remove('selected'));
             el.classList.add('selected');
-            if (type === 'sweetness') freeGiftSweetness = val;
-            if (type === 'ice') freeGiftIce = val;
-        }
-
-        function confirmGiftSelection() {
-            closeModal('giftModal');
-            const total = getCartTotalWithBag();
-            showPayModal(total);
-        }
-
-        function copyTotalAmount() {
-            const totalText = document.getElementById('payModalTotal').innerText.replace('$', '');
-            navigator.clipboard.writeText(totalText).then(() => {
-                alert(`已複製金額：${totalText} 元！開啟 LINE Pay 後貼上即可。`);
-            }).catch(err => {
-                alert(`複製失敗，請手動輸入金額：${totalText} 元`);
-            });
-        }
-
-        function showPayModal(total) {
-            document.getElementById('payModalTotal').innerText = `$${total}`;
-            document.getElementById('warningTotalAmount').innerText = `$${total}`;
-            document.getElementById('copyBtnAmount').innerText = total;
-            closeModal('cartModal');
-            document.getElementById('payModal').classList.add('active');
-        }
-
-        function switchPayTab(type) {
-            document.getElementById('btnTabLinePay').classList.remove('active');
-            document.getElementById('btnTabJko').classList.remove('active');
-
-            document.getElementById('payBoxLinePay').style.display = 'none';
-            document.getElementById('payBoxJko').style.display = 'none';
-
-            if (type === 'linepay') {
-                document.getElementById('btnTabLinePay').classList.add('active');
-                document.getElementById('payBoxLinePay').style.display = 'block';
-                selectedPayMethod = 'LINE Pay';
-            } else if (type === 'jko') {
-                document.getElementById('btnTabJko').classList.add('active');
-                document.getElementById('payBoxJko').style.display = 'block';
-                selectedPayMethod = '街口支付';
-            }
-        }
-
-        // 觸發防漏單跳窗
-        function triggerPayAppNotice(url) {
-            pendingPayUrl = url;
-            document.getElementById('noticeModal').classList.add('active');
-        }
-
-        // 顧客確認引導後才開啟支付 App
-        function proceedToPayApp() {
-            closeModal('noticeModal');
-            if (pendingPayUrl) {
-                window.open(pendingPayUrl, '_blank');
-            }
-        }
-
-        function saveLastOrderToStorage(finalCart) {
-            try {
-                localStorage.setItem('feng_last_order', JSON.stringify(finalCart));
-            } catch (e) {
-                console.warn('LocalStorage 無法儲存', e);
-            }
-        }
-
-        function checkLastOrder() {
-            try {
-                const saved = localStorage.getItem('feng_last_order');
-                if (saved) {
-                    const lastCart = JSON.parse(saved);
-                    if (lastCart && lastCart.length > 0) {
-                        const summaryText = lastCart.map(i => `${i.name} x${i.qty}`).join(', ');
-                        document.getElementById('reorderSummary').innerText = summaryText;
-                        document.getElementById('reorderCard').style.display = 'flex';
-                    }
-                }
-            } catch (e) {
-                console.warn('LocalStorage 讀取失敗', e);
-            }
-        }
-
-        function applyLastOrder() {
-            if (!isStoreOpen) {
-                alert('目前非營業時間，無法套用歷史點餐喔！');
-                return;
-            }
-            try {
-                const saved = localStorage.getItem('feng_last_order');
-                if (saved) {
-                    const lastCart = JSON.parse(saved);
-                    cart = lastCart.map(i => ({ ...i, id: Date.now() + Math.random() }));
-                    updateCart();
-                    alert('已順利將上次點餐品項載入購物車！');
-                }
-            } catch (e) {
-                alert('套用歷史訂單時發生錯誤！');
-            }
-        }
-
-        async function submitOrder() {
-            if (!isStoreOpen) {
-                alert('目前為非營業時間，無法送出訂單！');
-                return;
-            }
-
-            const pickupTime = document.getElementById('custPickupTime').value;
-            const name = document.getElementById('custName').value.trim();
-            const phone = document.getElementById('custPhone').value.trim();
-            const note = document.getElementById('custNote').value.trim();
-            
-            const bagQty = parseInt(document.getElementById('bagQuantity').value || 0, 10);
-            const total = getCartTotalWithBag();
-
-            let finalCartForSubmit = [...cart];
-            
-            if (bagQty > 0) {
-                finalCartForSubmit.push({
-                    name: "🛍️ 加購塑膠袋 (1~6杯裝)",
-                    finalPrice: 1,
-                    sweetness: "-",
-                    ice: "-",
-                    toppings: [],
-                    qty: bagQty
-                });
-            }
-
-            if (total >= 300) {
-                finalCartForSubmit.push({
-                    name: "🎁 [滿額贈] 招牌風鳥茶",
-                    finalPrice: 0,
-                    sweetness: freeGiftSweetness,
-                    ice: freeGiftIce,
-                    toppings: [],
-                    qty: 1
-                });
-            }
-
-            const orderData = {
-                pickupTime: pickupTime,
-                payMethod: selectedPayMethod,
-                name: name,
-                phone: phone,
-                note: note,
-                total: total,
-                cart: finalCartForSubmit
-            };
-
-            const btn = document.getElementById('submitOrderBtn');
-            btn.disabled = true;
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 正在傳送訂單...`;
-
-            saveLastOrderToStorage(cart);
-
-            let itemsDetail = '';
-            finalCartForSubmit.forEach(item => {
-                let toppingsText = (item.toppings && item.toppings.length > 0) ? ` + ${item.toppings.map(t=>t.name).join(', ')}` : '';
-                
-                if (item.name.includes('購物袋')) {
-                    itemsDetail += `• ${item.name} x${item.qty} - $${item.finalPrice * item.qty}\n`;
-                } else {
-                    itemsDetail += `• ${item.name} x${item.qty}\n  (${item.sweetness} / ${item.ice}${toppingsText}) - $${item.finalPrice * item.qty}\n`;
-                }
-            });
-
-            const lineMsg = `📋 【風鳥堂 - 線上點餐單】\n` +
-                            `👤 訂購人：${name}\n` +
-                            `📞 電話：${phone}\n` +
-                            `⏰ 取餐時間：${pickupTime}\n` +
-                            `💳 付款方式：${selectedPayMethod}\n` +
-                            `📝 備註：${note || '無'}\n` +
-                            `------------------------------\n` +
-                            `品項明細：\n${itemsDetail}` +
-                            `------------------------------\n` +
-                            `💰 總金額：$${total} 元\n` +
-                            `------------------------------\n` +
-                            `📌 請直接點擊傳送此訊息給風鳥堂，收到店家回覆「已收到訂單」後才算接單成功喔！`;
-
-            const encodedMsg = encodeURIComponent(lineMsg);
-            const lineUrl = `https://line.me/R/oaMessage/@${LINE_OFFICIAL_ID}/?${encodedMsg}`;
-
-            try {
-                const fetchPromise = fetch(GAS_WEB_APP_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(orderData)
-                });
-
-                const timeoutPromise = new Promise(resolve => setTimeout(resolve, 2500));
-                await Promise.race([fetchPromise, timeoutPromise]);
-            } catch (e) {
-                console.warn('GAS 寫入背景異常，仍繼續開啟 LINE:', e);
-            }
-
-            cart = [];
-            document.getElementById('bagQuantity').value = "0";
-            updateCart();
-            closeModal('payModal');
-            btn.disabled = false;
-            btn.innerHTML = `<i class="fa-brands fa-line" style="font-size: 1.4rem;"></i> 【必點】我已付款，點此發送訂單至 LINE ➔`;
-
-            window.open(lineUrl, '_self');
-        }
-
-        // 初始化
-        checkBusinessHours();
-        setInterval(checkBusinessHours, 60000); // 每分鐘定期比對時間
-        checkLastOrder();
-        fetchMenuFromSheet();
-    </script>
-</body>
-</html>
+            if (type ===
