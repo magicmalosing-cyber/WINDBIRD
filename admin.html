@@ -227,7 +227,7 @@
             padding-bottom: 0.4rem;
         }
 
-        /* 商品卡片調整（容納品名、可編輯價格、開關按鈕） */
+        /* 商品卡片調整 */
         .item-card {
             background: white;
             border-radius: var(--radius);
@@ -517,7 +517,6 @@
                 });
             } catch (e) {
                 console.error("全店狀態更新失敗", e);
-                alert('⚠️ 網路異常，全店狀態同步失敗！');
             }
         }
 
@@ -649,28 +648,34 @@
             });
         }
 
-        // 💰 更新價格寫回後端
+        // 💰 即時更新價格（POST no-cors 寫入 D 欄）
         async function updateItemPrice(itemName) {
-    triggerVibration();
-    const inputEl = document.getElementById(`price-${itemName}`);
-    const newPrice = Number(inputEl.value);
+            triggerVibration();
+            const inputEl = document.getElementById(`price-${itemName}`);
+            const newPrice = Number(inputEl.value);
 
-    if (isNaN(newPrice) || newPrice < 0) {
-        alert('⚠️ 請輸入有效的價格數字！');
-        return;
-    }
+            if (isNaN(newPrice) || newPrice < 0) {
+                alert('⚠️ 請輸入有效的價格數字！');
+                return;
+            }
 
-    // 直接用帶參數的網址發送 GET 請求，100% 穿透跨域限制寫入試算表
-    const url = `${GAS_WEB_APP_URL}?action=updatePrice&name=${encodeURIComponent(itemName)}&val=${newPrice}`;
-
-    try {
-        await fetch(url);
-        alert(`✅ 「${itemName}」價格已成功更新為 $${newPrice}！`);
-    } catch (e) {
-        console.error("價格更新寫入失敗", e);
-        alert('⚠️ 網路異常，價格寫入失敗！');
-    }
-}
+            try {
+                await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'updatePrice',
+                        name: itemName,
+                        price: newPrice
+                    })
+                });
+                alert(`✅ 「${itemName}」價格已送出更新為 $${newPrice}！`);
+            } catch (e) {
+                console.error("價格更新寫入失敗", e);
+                alert('⚠️ 網路異常，價格寫入失敗！');
+            }
+        }
 
         async function toggleItemStatus(btn, itemName) {
             triggerVibration();
@@ -701,7 +706,6 @@
                 });
             } catch (e) {
                 console.error("狀態更新寫入失敗", e);
-                alert('⚠️ 網路異常，請確認狀態是否已寫入試算表！');
             }
         }
 
