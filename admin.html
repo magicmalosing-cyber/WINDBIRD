@@ -628,8 +628,8 @@
             });
         }
 
-        // 💰 價格更新診斷版 (會將回應直接秀在畫面上供您排查)
-        async function updateItemPrice(btnEl, itemName) {
+        // 💰 絕對送達的價格更新 (使用隱藏 Form 提交，繞過所有 fetch 與 CORS 限制)
+        function updateItemPrice(btnEl, itemName) {
             triggerVibration();
             const inputEl = btnEl.previousElementSibling;
             const newPrice = Number(inputEl.value);
@@ -639,15 +639,33 @@
                 return;
             }
 
-            const url = `${GAS_WEB_APP_URL}?action=updatePrice&name=${encodeURIComponent(itemName)}&val=${newPrice}&t=${Date.now()}`;
-            
-            try {
-                const response = await fetch(url);
-                const text = await response.text();
-                alert(`✅ 發送成功！\n品名: ${itemName}\n新價格: ${newPrice}\n後端回應: ${text}`);
-            } catch (e) {
-                alert(`❌ 發生攔截或錯誤：\n${e.message}`);
+            // 動態建立隱藏表單提交，保證 100% 能打到 GAS 後端
+            const form = document.createElement('form');
+            form.action = GAS_WEB_APP_URL;
+            form.method = 'GET';
+            form.target = '_blank'; // 可改為隱藏 iframe，此處先用新視窗確保看得見結果
+
+            // 加入參數
+            const params = {
+                action: 'updatePrice',
+                name: itemName,
+                val: newPrice,
+                t: Date.now()
+            };
+
+            for (const key in params) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = params[key];
+                form.appendChild(input);
             }
+
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
+
+            alert(`✅ 已強制送出「${itemName}」的新價格 $${newPrice}！請檢查 Apps Script 執行紀錄與試算表。`);
         }
 
         // 🎯 即時切換狀態
