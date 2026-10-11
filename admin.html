@@ -60,7 +60,6 @@
             padding: 1rem 0.75rem;
         }
 
-        /* 頂部大品項：多行自動平鋪 */
         .category-nav {
             display: flex;
             flex-wrap: wrap;
@@ -243,7 +242,7 @@
                     categoriesMap[catId].items.push({ name: rawName, price, status });
                 });
 
-                // 處理獨立加料頁籤資料
+                // 處理獨立加料頁籤資料（正確對應 A欄名稱、B欄價格、C欄狀態）
                 if (toppingRes) {
                     try {
                         const topJsonStr = toppingRes.substring(47, toppingRes.length - 2);
@@ -251,13 +250,17 @@
                         topJson.table.rows.forEach(row => {
                             const c = row.c;
                             if (!c) return;
-                            const tName = c[0] ? String(c[0].v || '') : (c[2] ? String(c[2].v || '') : '');
-                            const tPrice = c[1] ? Number(c[1].v || 0) : (c[3] ? Number(c[3].v || 0) : 0);
-                            const tStatus = c[2] ? String(c[2].v || '上架') : (c[5] ? String(c[5].v || '上架') : '上架');
+                            const tName = c[0] ? String(c[0].v || '') : '';
+                            const tPrice = c[1] ? Number(c[1].v || 0) : 0;
+                            const tStatus = c[2] ? String(c[2].v || '上架') : '上架';
 
                             if (tName && !tName.includes('加料區')) {
                                 if (!toppingItems.some(t => t.name === tName)) {
                                     toppingItems.push({ name: tName, price: tPrice, status: tStatus });
+                                } else {
+                                    // 更新現有狀態
+                                    const existing = toppingItems.find(t => t.name === tName);
+                                    if (existing) existing.status = tStatus;
                                 }
                             }
                         });
@@ -266,7 +269,6 @@
                     }
                 }
 
-                // 如果有收集到加料項目，包成一個大分類加入選單
                 if (toppingItems.length > 0) {
                     categoriesMap['cat-topping-section'] = {
                         id: 'cat-topping-section',
