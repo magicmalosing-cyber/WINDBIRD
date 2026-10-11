@@ -718,6 +718,7 @@
         </div>
     </div>
 
+    <!-- 付款碼彈窗 Modal -->
     <div class="modal-backdrop" id="payModal">
         <div class="modal-card">
             <div class="modal-header">
@@ -735,6 +736,7 @@
                 <button class="pay-tab-btn" id="btnTabJko" onclick="switchPayTab('jko')">街口支付</button>
             </div>
 
+            <!-- LINE Pay 付款區塊 -->
             <div class="qr-box" id="payBoxLinePay">
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.6rem;">
                     請先點擊複製金額，開啟 LINE Pay 後直接貼上：
@@ -751,6 +753,7 @@
                 </a>
             </div>
 
+            <!-- 街口支付區塊 -->
             <div class="qr-box" id="payBoxJko" style="display: none;">
                 <p style="font-size: 0.85rem; font-weight: bold; color: var(--text-dark);">請長按圖片儲存，或截圖下方 QR Code</p>
                 <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">開啟街口支付 App ➔ 點擊「掃描」選擇相冊圖片進行付款</p>
@@ -758,10 +761,11 @@
                     <img src="jkopay.jpg" alt="街口支付 QR Code" class="qr-img">
                 </a>
                 <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">（提示：點擊上方圖片可在新頁面開啟大圖便利長按儲存）</p>
-            </div>
-
-            <div class="pay-warning-box">
-                💡 <strong>貼心優化：</strong>點擊上方綠色按鈕後，系統會自動將訂單送給店家並開啟付款，不必擔心跳出去回不來！
+                
+                <!-- 街口專用：付款後點擊送單按鈕 -->
+                <button class="btn-primary btn-submit-highlight" id="submitOrderBtn" onclick="submitOrder()" style="margin-top: 1rem; width: 100%;">
+                    <i class="fa-brands fa-line" style="font-size: 1.4rem;"></i> 【必點】我已付款，點此發送訂單至 LINE ➔
+                </button>
             </div>
         </div>
     </div>
