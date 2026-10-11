@@ -28,6 +28,31 @@
             background-color: var(--bg-light);
             color: var(--text-dark);
             padding-bottom: 50px;
+            transition: background-color 0.3s ease;
+        }
+
+        /* ⚠️ 打烊狀態背景與警示 */
+        body.is-closed-mode {
+            background-color: #fef2f2;
+        }
+
+        .closed-alert-banner {
+            display: none;
+            background-color: #dc2626;
+            color: white;
+            text-align: center;
+            padding: 0.6rem 1rem;
+            font-weight: 800;
+            font-size: 0.95rem;
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4);
+            letter-spacing: 0.5px;
+        }
+
+        body.is-closed-mode .closed-alert-banner {
+            display: block;
         }
 
         header {
@@ -39,6 +64,10 @@
             top: 0;
             z-index: 30;
             box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+        }
+
+        body.is-closed-mode header {
+            top: 38px; /* 為頂部警示條留出空間 */
         }
 
         .header-title {
@@ -100,6 +129,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        body.is-closed-mode .store-master-card {
+            background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%);
+            border-color: #ef4444;
         }
 
         .store-master-info h3 {
@@ -112,7 +147,7 @@
 
         .store-master-info p {
             font-size: 0.85rem;
-            opacity: 0.8;
+            opacity: 0.85;
             margin-top: 0.2rem;
         }
 
@@ -143,6 +178,7 @@
             background-color: #ef4444;
             color: white;
             border: 2px solid #f87171;
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
         }
 
         .search-box-wrapper {
@@ -188,6 +224,10 @@
             top: 68px;
             z-index: 20;
             border: 1px solid var(--border-color);
+        }
+
+        body.is-closed-mode .category-nav {
+            top: 106px;
         }
 
         .category-btn {
@@ -380,6 +420,11 @@
 </head>
 <body>
 
+    <!-- ⚠️ 打烊狀態頂部醒目紅條 -->
+    <div class="closed-alert-banner" id="closedAlertBanner">
+        <i class="fa-solid fa-triangle-exclamation"></i> 目前店鋪處於暫停營業狀態，線上前台將無法下單！
+    </div>
+
     <header>
         <div class="header-title">⚡ 風鳥堂 - 即時缺貨與價格管理後台</div>
         <div class="header-subtitle">店鋪總開關、品項搜尋、震動回饋與即時價格修改</div>
@@ -446,7 +491,6 @@
             toast.innerHTML = `${icon} <span>${message}</span>`;
             container.appendChild(toast);
 
-            // 2.5秒後自動從 DOM 移除
             setTimeout(() => {
                 toast.remove();
             }, 2500);
@@ -532,18 +576,17 @@
         function updateStoreMasterUI() {
             const btn = document.getElementById('masterToggleBtn');
             const statusText = document.getElementById('storeMasterStatusText');
-            const card = document.getElementById('storeMasterCard');
 
             if (storeIsOpen) {
+                document.body.classList.remove('is-closed-mode');
                 btn.className = 'master-toggle-btn open';
                 btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> 營業中';
                 statusText.innerText = '目前正常營業中，顧客可隨時線上點餐';
-                card.style.borderColor = '#16a34a';
             } else {
+                document.body.classList.add('is-closed-mode');
                 btn.className = 'master-toggle-btn closed';
                 btn.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> 暫停營業';
                 statusText.innerText = '⚠️ 目前已暫停營業，前端點餐將顯示打烊中';
-                card.style.borderColor = '#dc2626';
             }
         }
 
@@ -692,7 +735,7 @@
             });
         }
 
-        // 💰 價格更新 (結合 Toast 浮動提示)
+        // 💰 價格更新
         function updateItemPrice(btnEl, itemName) {
             triggerVibration();
             const inputEl = btnEl.previousElementSibling;
@@ -710,7 +753,7 @@
             showToast(`「${itemName}」價格已更新為 $${newPrice}`);
         }
 
-        // 🎯 即時切換狀態 (結合 Toast 浮動提示)
+        // 🎯 即時切換狀態
         function toggleItemStatus(btn, itemName) {
             triggerVibration();
             const isCurrentlySoldOut = btn.classList.contains('off');
