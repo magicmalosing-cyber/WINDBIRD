@@ -426,6 +426,15 @@
             background-color: #05b34c;
         }
 
+        .btn-submit-highlight {
+            background: linear-gradient(135deg, #05b34c 0%, #028a3a 100%);
+            color: white;
+            font-size: 1.1rem;
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(6, 199, 85, 0.4);
+        }
+
         .cart-item {
             display: flex;
             justify-content: space-between;
@@ -508,19 +517,6 @@
             padding: 3rem;
             font-size: 1.1rem;
             color: var(--text-muted);
-        }
-
-        .pay-warning-box {
-            background-color: #fef2f2;
-            border: 2px solid #ef4444;
-            color: #b91c1c;
-            padding: 0.8rem;
-            border-radius: 10px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            margin-top: 1rem;
-            text-align: center;
-            line-height: 1.4;
         }
     </style>
 </head>
@@ -736,7 +732,7 @@
                 <button class="pay-tab-btn" id="btnTabJko" onclick="switchPayTab('jko')">街口支付</button>
             </div>
 
-            <!-- LINE Pay 付款區塊 -->
+            <!-- LINE Pay 付款區塊 (一鍵自動背景送單並跳轉) -->
             <div class="qr-box" id="payBoxLinePay">
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.6rem;">
                     請先點擊複製金額，開啟 LINE Pay 後直接貼上：
@@ -753,7 +749,7 @@
                 </a>
             </div>
 
-            <!-- 街口支付區塊 -->
+            <!-- 街口支付區塊 (保留 QR Code 與手動送單按鈕) -->
             <div class="qr-box" id="payBoxJko" style="display: none;">
                 <p style="font-size: 0.85rem; font-weight: bold; color: var(--text-dark);">請長按圖片儲存，或截圖下方 QR Code</p>
                 <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">開啟街口支付 App ➔ 點擊「掃描」選擇相冊圖片進行付款</p>
@@ -761,8 +757,7 @@
                     <img src="jkopay.jpg" alt="街口支付 QR Code" class="qr-img">
                 </a>
                 <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">（提示：點擊上方圖片可在新頁面開啟大圖便利長按儲存）</p>
-                
-                <!-- 街口專用：付款後點擊送單按鈕 -->
+
                 <button class="btn-primary btn-submit-highlight" id="submitOrderBtn" onclick="submitOrder()" style="margin-top: 1rem; width: 100%;">
                     <i class="fa-brands fa-line" style="font-size: 1.4rem;"></i> 【必點】我已付款，點此發送訂單至 LINE ➔
                 </button>
@@ -1485,6 +1480,7 @@
             }
         }
 
+        // LINE Pay 專用：自動背景送單並跳轉
         async function handleAutoPayAndSubmit(payUrl) {
             if (!isStoreOpen) {
                 alert('目前為非營業時間，無法送出訂單！');
@@ -1580,6 +1576,117 @@
 
             window.open(lineUrl, '_blank');
             window.location.href = payUrl;
+        }
+
+        // 街口支付專用：手動點擊送出訂單
+        async function submitOrder() {
+            if (!isStoreOpen) {
+                alert('目前為非營業時間，無法送出訂單！');
+                return;
+            }
+
+            const pickupTime = document.getElementById('custPickupTime').value;
+            const name = document.getElementById('custName').value.trim();
+            const phone = document.getElementById('custPhone').value.trim();
+            const note = document.getElementById('custNote').value.trim();
+            
+            const bagQty = parseInt(document.getElementById('bagQuantity').value || 0, 10);
+            const total = getCartTotalWithBag();
+
+            let finalCartForSubmit = [...cart];
+            
+            if (bagQty > 0) {
+                finalCartForSubmit.push({
+                    name: "🛍️ 加購塑膠袋 (1~6杯裝)",
+                    finalPrice: 1,
+                    sweetness: "-",
+                    ice: "-",
+                    toppings: [],
+                    qty: bagQty
+                });
+            }
+
+            if (total >= 300) {
+                finalCartForSubmit.push({
+                    name: "🎁 [滿額贈] 招牌風鳥茶",
+                    finalPrice: 0,
+                    sweetness: freeGiftSweetness,
+                    ice: freeGiftIce,
+                    toppings: [],
+                    qty: 1
+                });
+            }
+
+            const orderData = {
+                pickupTime: pickupTime,
+                payMethod: selectedPayMethod,
+                name: name,
+                phone: phone,
+                note: note,
+                total: total,
+                cart: finalCartForSubmit
+            };
+
+            const btn = document.getElementById('submitOrderBtn');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 正在傳送訂單...`;
+            }
+
+            saveLastOrderToStorage(cart);
+
+            let itemsDetail = '';
+            finalCartForSubmit.forEach(item => {
+                let toppingsText = (item.toppings && item.toppings.length > 0) ? ` + ${item.toppings.map(t=>t.name).join(', ')}` : '';
+                
+                if (item.name.includes('購物袋')) {
+                    itemsDetail += `• ${item.name} x${item.qty} - $${item.finalPrice * item.qty}\n`;
+                } else {
+                    itemsDetail += `• ${item.name} x${item.qty}\n  (${item.sweetness} / ${item.ice}${toppingsText}) - $${item.finalPrice * item.qty}\n`;
+                }
+            });
+
+            const lineMsg = `📋 【風鳥堂 - 線上點餐單】\n` +
+                            `👤 訂購人：${name}\n` +
+                            `📞 電話：${phone}\n` +
+                            `⏰ 取餐時間：${pickupTime}\n` +
+                            `💳 付款方式：${selectedPayMethod}\n` +
+                            `📝 備註：${note || '無'}\n` +
+                            `------------------------------\n` +
+                            `品項明細：\n${itemsDetail}` +
+                            `------------------------------\n` +
+                            `💰 總金額：$${total} 元\n` +
+                            `------------------------------\n` +
+                            `📌 請直接點擊傳送此訊息給風鳥堂，收到店家回覆「已收到訂單」後才算接單成功喔！`;
+
+            const encodedMsg = encodeURIComponent(lineMsg);
+            const lineUrl = `https://line.me/R/oaMessage/@${LINE_OFFICIAL_ID}/?${encodedMsg}`;
+
+            try {
+                const fetchPromise = fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orderData)
+                });
+
+                const timeoutPromise = new Promise(resolve => setTimeout(resolve, 2500));
+                await Promise.race([fetchPromise, timeoutPromise]);
+            } catch (e) {
+                console.warn('GAS 寫入背景異常，仍繼續開啟 LINE:', e);
+            }
+
+            cart = [];
+            document.getElementById('bagQuantity').value = "0";
+            updateCart();
+            closeModal('payModal');
+
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-brands fa-line" style="font-size: 1.4rem;"></i> 【必點】我已付款，點此發送訂單至 LINE ➔`;
+            }
+
+            window.open(lineUrl, '_self');
         }
 
         checkBusinessHours();
