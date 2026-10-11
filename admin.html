@@ -53,7 +53,6 @@
             margin-top: 0.2rem;
         }
 
-        /* 放寬容器，不擠在中間小框框 */
         .container {
             width: 100%;
             max-width: 900px;
@@ -61,7 +60,7 @@
             padding: 1rem 0.75rem;
         }
 
-        /* 頂部大品項：改為多行自動平鋪，不用左右滾動 */
+        /* 頂部大品項：多行自動平鋪 */
         .category-nav {
             display: flex;
             flex-wrap: wrap;
@@ -98,7 +97,6 @@
             border-color: var(--primary);
         }
 
-        /* 區塊標題 */
         .section-title {
             font-size: 1.2rem;
             font-weight: 800;
@@ -111,7 +109,6 @@
             padding-bottom: 0.4rem;
         }
 
-        /* 品項列表卡片：全寬展開 */
         .item-card {
             background: white;
             border-radius: var(--radius);
@@ -149,7 +146,6 @@
             margin-top: 0.2rem;
         }
 
-        /* 開關按鈕設計：放大且容易點擊 */
         .toggle-btn {
             padding: 0.65rem 1.3rem;
             border-radius: 12px;
@@ -192,38 +188,40 @@
 
     <header>
         <div class="header-title">⚡ 風鳥堂 - 即時缺貨開關控制台</div>
-        <div class="header-subtitle">點擊按鈕即時切換，顧客線上點餐網頁秒同步</div>
+        <div class="header-subtitle">點擊按鈕即時切換，包含飲品與加料區，網頁秒同步</div>
     </header>
 
     <div class="container">
-        <!-- 頂部大品項：多行平鋪全部呈現 -->
         <nav class="category-nav" id="categoryNav">
             <button class="category-btn active">載入中...</button>
         </nav>
 
-        <!-- 依分類呈現的商品直列區塊 -->
         <div id="adminMenuContainer">
-            <div class="loading-box"><i class="fa-solid fa-spinner fa-spin"></i> 菜單清單載入中...</div>
+            <div class="loading-box"><i class="fa-solid fa-spinner fa-spin"></i> 菜單與加料清單載入中...</div>
         </div>
     </div>
 
     <script>
         const SPREADSHEET_ID = '1_5ynzti6fA6RUq5UUjB28oxw2u2eFMs4RiGRzUmKvQU';
         const MENU_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
+        const TOPPING_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&gid=1381768995`;
         const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxpuB_w20nq4ZtldzABmuVqu-iUUgDFW1nBQpuFP2j_8Yj2cv7qla-atfDfCWDFxxb5RA/exec';
 
         let adminMenuData = [];
 
         async function fetchAdminMenu() {
             try {
-                const res = await fetch(MENU_SHEET_URL);
-                const text = await res.text();
-                const jsonStr = text.substring(47, text.length - 2);
-                const json = JSON.parse(jsonStr);
-                
-                const categoriesMap = {};
+                const [menuRes, toppingRes] = await Promise.all([
+                    fetch(MENU_SHEET_URL).then(r => r.text()),
+                    fetch(TOPPING_SHEET_URL).then(r => r.text()).catch(() => null)
+                ]);
 
-                json.table.rows.forEach(row => {
+                const menuJsonStr = menuRes.substring(47, menuRes.length - 2);
+                const menuJson = JSON.parse(menuJsonStr);
+                const categoriesMap = {};
+                let toppingItems = [];
+
+                menuJson.table.rows.forEach(row => {
                     const c = row.c;
                     if (!c) return;
                     const catId = c[0] ? String(c[0].v || '') : '';
@@ -234,11 +232,48 @@
 
                     if (catId === 'system' || !rawName || rawName.includes('平台開關')) return;
 
+                    if (catId === 'cat-topping' || catTitle.includes('加料')) {
+                        parseToppingsIntoArray(rawName, price, status, toppingItems);
+                        return;
+                    }
+
                     if (!categoriesMap[catId]) {
                         categoriesMap[catId] = { id: catId, title: catTitle, items: [] };
                     }
                     categoriesMap[catId].items.push({ name: rawName, price, status });
                 });
+
+                // 處理獨立加料頁籤資料
+                if (toppingRes) {
+                    try {
+                        const topJsonStr = toppingRes.substring(47, toppingRes.length - 2);
+                        const topJson = JSON.parse(topJsonStr);
+                        topJson.table.rows.forEach(row => {
+                            const c = row.c;
+                            if (!c) return;
+                            const tName = c[0] ? String(c[0].v || '') : (c[2] ? String(c[2].v || '') : '');
+                            const tPrice = c[1] ? Number(c[1].v || 0) : (c[3] ? Number(c[3].v || 0) : 0);
+                            const tStatus = c[2] ? String(c[2].v || '上架') : (c[5] ? String(c[5].v || '上架') : '上架');
+
+                            if (tName && !tName.includes('加料區')) {
+                                if (!toppingItems.some(t => t.name === tName)) {
+                                    toppingItems.push({ name: tName, price: tPrice, status: tStatus });
+                                }
+                            }
+                        });
+                    } catch (e) {
+                        console.warn("解析獨立加料頁失敗", e);
+                    }
+                }
+
+                // 如果有收集到加料項目，包成一個大分類加入選單
+                if (toppingItems.length > 0) {
+                    categoriesMap['cat-topping-section'] = {
+                        id: 'cat-topping-section',
+                        title: '🟡 加料區（配料選擇）',
+                        items: toppingItems
+                    };
+                }
 
                 adminMenuData = Object.values(categoriesMap);
                 renderCategoryNav();
@@ -250,7 +285,16 @@
             }
         }
 
-        // 渲染大品項（改為自動換行平鋪）
+        function parseToppingsIntoArray(rawName, price, status, targetArray) {
+            const items = rawName.split(/[/、,]/);
+            items.forEach(item => {
+                const name = item.trim();
+                if (name && !name.includes('加料區') && !targetArray.some(t => t.name === name)) {
+                    targetArray.push({ name, price, status });
+                }
+            });
+        }
+
         function renderCategoryNav() {
             const nav = document.getElementById('categoryNav');
             let navHtml = `<button class="category-btn active" data-cat="all" onclick="scrollToCategory('all')">全部品項</button>`;
@@ -261,7 +305,6 @@
             nav.innerHTML = navHtml;
         }
 
-        // 渲染商品分類與卡片
         function renderAdminUI() {
             const container = document.getElementById('adminMenuContainer');
             container.innerHTML = '';
@@ -294,7 +337,6 @@
             });
         }
 
-        // 快速滑動至指定大品項
         function scrollToCategory(id) {
             if (id === 'all') {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -309,7 +351,6 @@
             }
         }
 
-        // 監聽滾動同步亮燈大品項按鈕
         function setupScrollspy() {
             window.addEventListener('scroll', () => {
                 const sections = document.querySelectorAll('.menu-section');
@@ -334,13 +375,11 @@
             });
         }
 
-        // 切換狀態寫回 GAS
         async function toggleItemStatus(btn, itemName) {
             const isCurrentlySoldOut = btn.classList.contains('off');
             const newStatus = isCurrentlySoldOut ? '上架' : '售完';
             const card = btn.closest('.item-card');
 
-            // 畫面零時差先變色反應
             if (newStatus === '售完') {
                 btn.className = 'toggle-btn off';
                 btn.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> 已售完';
@@ -351,7 +390,6 @@
                 card.classList.remove('is-sold-out');
             }
 
-            // 背景非同步傳送更新
             try {
                 await fetch(GAS_WEB_APP_URL, {
                     method: 'POST',
@@ -369,7 +407,6 @@
             }
         }
 
-        // 初始化
         fetchAdminMenu();
     </script>
 </body>
