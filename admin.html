@@ -633,4 +633,13 @@
                         status: newStatus
                     })
                 });
-            } catch (e)
+            } catch (e) {
+                console.error("狀態更新寫入失敗", e);
+                alert('⚠️ 網路異常，請確認狀態是否已寫入試算表！');
+            }
+        }
+
+        fetchAdminData();
+    </script>
+</body>
+</html>
