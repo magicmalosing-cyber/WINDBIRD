@@ -384,8 +384,9 @@
 
     <script>
         const SPREADSHEET_ID = '1_5ynzti6fA6RUq5UUjB28oxw2u2eFMs4RiGRzUmKvQU';
-        const MENU_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
-        const ORDERS_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=訂單紀錄`;
+        // 加上時間戳記 &t 防止讀取到 Google 試算表舊快取
+        const MENU_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&t=` + new Date().getTime();
+        const ORDERS_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=訂單紀錄&t=` + new Date().getTime();
         const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxpuB_w20nq4ZtldzABmuVqu-iUUgDFW1nBQpuFP2j_8Yj2cv7qla-atfDfCWDFxxb5RA/exec';
 
         let adminMenuData = [];
@@ -493,7 +494,7 @@
             const newStatus = storeIsOpen ? '營業中' : '暫停營業';
 
             try {
-                const url = `${GAS_WEB_APP_URL}?action=updateStatus&name=${encodeURIComponent('平台開關')}&val=${encodeURIComponent(newStatus)}`;
+                const url = `${GAS_WEB_APP_URL}?action=updateStatus&name=${encodeURIComponent('平台開關')}&val=${encodeURIComponent(newStatus)}&t=${Date.now()}`;
                 await fetch(url);
             } catch (e) {
                 console.error("全店狀態更新失敗", e);
@@ -628,7 +629,7 @@
             });
         }
 
-        // 💰 即時更新價格 (GET 帶參數直達寫入)
+        // 💰 即時更新價格 (GET 帶防快取參數)
         async function updateItemPrice(btnEl, itemName) {
             triggerVibration();
             const inputEl = btnEl.previousElementSibling;
@@ -640,7 +641,7 @@
             }
 
             try {
-                const url = `${GAS_WEB_APP_URL}?action=updatePrice&name=${encodeURIComponent(itemName)}&val=${newPrice}`;
+                const url = `${GAS_WEB_APP_URL}?action=updatePrice&name=${encodeURIComponent(itemName)}&val=${newPrice}&t=${Date.now()}`;
                 await fetch(url);
                 alert(`✅ 「${itemName}」價格已成功更新為 $${newPrice}！`);
             } catch (e) {
@@ -649,7 +650,7 @@
             }
         }
 
-        // 🎯 即時切換缺貨狀態
+        // 🎯 即時切換狀態
         async function toggleItemStatus(btn, itemName) {
             triggerVibration();
             const isCurrentlySoldOut = btn.classList.contains('off');
@@ -667,7 +668,7 @@
             }
 
             try {
-                const url = `${GAS_WEB_APP_URL}?action=updateStatus&name=${encodeURIComponent(itemName)}&val=${encodeURIComponent(newStatus)}`;
+                const url = `${GAS_WEB_APP_URL}?action=updateStatus&name=${encodeURIComponent(itemName)}&val=${encodeURIComponent(newStatus)}&t=${Date.now()}`;
                 await fetch(url);
             } catch (e) {
                 console.error("狀態更新寫入失敗", e);
