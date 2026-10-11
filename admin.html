@@ -337,6 +337,45 @@
             font-size: 1.1rem;
             color: var(--text-muted);
         }
+
+        /* 🍞 浮動吐司提示 Toast 樣式 */
+        #toast-container {
+            position: fixed;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .toast-msg {
+            background: rgba(15, 23, 42, 0.92);
+            color: white;
+            padding: 0.75rem 1.25rem;
+            border-radius: 30px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            animation: fadeInUp 0.3s ease, fadeOutDown 0.3s ease 2.2s forwards;
+            backdrop-filter: blur(4px);
+            white-space: nowrap;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeOutDown {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(20px); }
+        }
     </style>
 </head>
 <body>
@@ -382,6 +421,9 @@
         </div>
     </div>
 
+    <!-- 🍞 吐司通知容器 -->
+    <div id="toast-container"></div>
+
     <script>
         const SPREADSHEET_ID = '1_5ynzti6fA6RUq5UUjB28oxw2u2eFMs4RiGRzUmKvQU';
         const MENU_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&t=` + new Date().getTime();
@@ -390,6 +432,25 @@
 
         let adminMenuData = [];
         let storeIsOpen = true;
+
+        // 🍞 顯示浮動提示函式
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast-msg';
+            
+            const icon = type === 'success' 
+                ? '<i class="fa-solid fa-circle-check" style="color: #4ade80;"></i>' 
+                : '<i class="fa-solid fa-circle-exclamation" style="color: #f87171;"></i>';
+
+            toast.innerHTML = `${icon} <span>${message}</span>`;
+            container.appendChild(toast);
+
+            // 2.5秒後自動從 DOM 移除
+            setTimeout(() => {
+                toast.remove();
+            }, 2500);
+        }
 
         async function fetchAdminData() {
             try {
@@ -492,9 +553,12 @@
             updateStoreMasterUI();
             const newStatus = storeIsOpen ? '營業中' : '暫停營業';
 
+            showToast(`全店狀態已切換為：${newStatus}`);
+
             try {
                 const url = `${GAS_WEB_APP_URL}?action=updateStatus&name=${encodeURIComponent('平台開關')}&val=${encodeURIComponent(newStatus)}&t=${Date.now()}`;
-                await fetch(url);
+                const img = new Image();
+                img.src = url;
             } catch (e) {
                 console.error("全店狀態更新失敗", e);
             }
@@ -628,48 +692,26 @@
             });
         }
 
-        // 💰 絕對送達的價格更新 (使用隱藏 Form 提交，繞過所有 fetch 與 CORS 限制)
+        // 💰 價格更新 (結合 Toast 浮動提示)
         function updateItemPrice(btnEl, itemName) {
             triggerVibration();
             const inputEl = btnEl.previousElementSibling;
             const newPrice = Number(inputEl.value);
 
             if (isNaN(newPrice) || newPrice < 0) {
-                alert('⚠️ 請輸入有效的價格數字！');
+                showToast('請輸入有效的價格數字！', 'error');
                 return;
             }
 
-            // 動態建立隱藏表單提交，保證 100% 能打到 GAS 後端
-            const form = document.createElement('form');
-            form.action = GAS_WEB_APP_URL;
-            form.method = 'GET';
-            form.target = '_blank'; // 可改為隱藏 iframe，此處先用新視窗確保看得見結果
+            const url = `${GAS_WEB_APP_URL}?action=updatePrice&name=${encodeURIComponent(itemName)}&val=${newPrice}&t=${Date.now()}`;
+            const img = new Image();
+            img.src = url;
 
-            // 加入參數
-            const params = {
-                action: 'updatePrice',
-                name: itemName,
-                val: newPrice,
-                t: Date.now()
-            };
-
-            for (const key in params) {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = key;
-                input.value = params[key];
-                form.appendChild(input);
-            }
-
-            document.body.appendChild(form);
-            form.submit();
-            document.body.removeChild(form);
-
-            alert(`✅ 已強制送出「${itemName}」的新價格 $${newPrice}！請檢查 Apps Script 執行紀錄與試算表。`);
+            showToast(`「${itemName}」價格已更新為 $${newPrice}`);
         }
 
-        // 🎯 即時切換狀態
-        async function toggleItemStatus(btn, itemName) {
+        // 🎯 即時切換狀態 (結合 Toast 浮動提示)
+        function toggleItemStatus(btn, itemName) {
             triggerVibration();
             const isCurrentlySoldOut = btn.classList.contains('off');
             const newStatus = isCurrentlySoldOut ? '上架' : '售完';
@@ -679,18 +721,17 @@
                 btn.className = 'toggle-btn off';
                 btn.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> 已售完';
                 card.classList.add('is-sold-out');
+                showToast(`「${itemName}」已設為完售`);
             } else {
                 btn.className = 'toggle-btn on';
                 btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> 供應中';
                 card.classList.remove('is-sold-out');
+                showToast(`「${itemName}」已恢復供應`);
             }
 
-            try {
-                const url = `${GAS_WEB_APP_URL}?action=updateStatus&name=${encodeURIComponent(itemName)}&val=${encodeURIComponent(newStatus)}&t=${Date.now()}`;
-                await fetch(url);
-            } catch (e) {
-                console.error("狀態更新寫入失敗", e);
-            }
+            const url = `${GAS_WEB_APP_URL}?action=updateStatus&name=${encodeURIComponent(itemName)}&val=${encodeURIComponent(newStatus)}&t=${Date.now()}`;
+            const img = new Image();
+            img.src = url;
         }
 
         fetchAdminData();
