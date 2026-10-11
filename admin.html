@@ -60,7 +60,6 @@
             padding: 1rem 0.75rem;
         }
 
-        /* 📦 今日營運快覽小看板 */
         .stats-dashboard {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -90,7 +89,6 @@
             margin-top: 0.2rem;
         }
 
-        /* 🎯 全店總開關卡片 */
         .store-master-card {
             background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
             color: white;
@@ -147,7 +145,6 @@
             border: 2px solid #f87171;
         }
 
-        /* 🔍 搜尋列樣式 */
         .search-box-wrapper {
             margin-bottom: 1rem;
             position: relative;
@@ -178,7 +175,6 @@
             font-size: 1rem;
         }
 
-        /* 頂部大品項導覽 */
         .category-nav {
             display: flex;
             flex-wrap: wrap;
@@ -227,7 +223,6 @@
             padding-bottom: 0.4rem;
         }
 
-        /* 商品卡片調整 */
         .item-card {
             background: white;
             border-radius: var(--radius);
@@ -259,7 +254,6 @@
             margin-bottom: 0.3rem;
         }
 
-        /* 價格輸入框樣式 */
         .price-edit-wrapper {
             display: flex;
             align-items: center;
@@ -307,7 +301,6 @@
             border-color: var(--primary);
         }
 
-        /* 開關按鈕 */
         .toggle-btn {
             padding: 0.6rem 1.1rem;
             border-radius: 12px;
@@ -354,7 +347,6 @@
     </header>
 
     <div class="container">
-        <!-- 📦 今日營運快覽小看板 -->
         <div class="stats-dashboard">
             <div class="stat-card">
                 <div class="stat-label"><i class="fa-solid fa-receipt"></i> 今日已接單數</div>
@@ -366,7 +358,6 @@
             </div>
         </div>
 
-        <!-- 🎯 全店總開關卡片 -->
         <div class="store-master-card" id="storeMasterCard">
             <div class="store-master-info">
                 <h3><i class="fa-solid fa-store"></i> 全店線上點餐狀態</h3>
@@ -377,18 +368,15 @@
             </button>
         </div>
 
-        <!-- 🔍 品項關鍵字搜尋列 -->
         <div class="search-box-wrapper">
             <i class="fa-solid fa-magnifying-glass search-icon"></i>
             <input type="text" id="searchInput" class="search-input" placeholder="輸入品項名稱快速搜尋（例如：紅茶、珍珠、拿鐵）..." oninput="filterMenuItems()">
         </div>
 
-        <!-- 頂部大品項導覽 -->
         <nav class="category-nav" id="categoryNav">
             <button class="category-btn active" id="allCatBtn" onclick="scrollToCategory('all')">全部品項</button>
         </nav>
 
-        <!-- 商品分類清單 -->
         <div id="adminMenuContainer">
             <div class="loading-box"><i class="fa-solid fa-spinner fa-spin"></i> 菜單與營運數據載入中...</div>
         </div>
@@ -580,8 +568,8 @@
                                 <div class="item-name">${item.name}</div>
                                 <div class="price-edit-wrapper">
                                     <span class="price-currency">$</span>
-                                    <input type="number" class="price-input" value="${item.price}" id="price-${item.name}" />
-                                    <button class="save-price-btn" onclick="updateItemPrice('${item.name}')"><i class="fa-solid fa-check"></i> 更改</button>
+                                    <input type="number" class="price-input" value="${item.price}" />
+                                    <button class="save-price-btn" onclick="updateItemPrice(this, '${item.name}')"><i class="fa-solid fa-check"></i> 更改</button>
                                 </div>
                             </div>
                             <button class="toggle-btn ${isSoldOut ? 'off' : 'on'}" onclick="toggleItemStatus(this, '${item.name}')">
@@ -648,10 +636,11 @@
             });
         }
 
-        // 💰 即時更新價格（POST no-cors 寫入 D 欄）
-        async function updateItemPrice(itemName) {
+        // 💰 即時更新價格（改用按鈕相對定位抓取輸入框，完美避開特殊符號ID問題）
+        async function updateItemPrice(btnEl, itemName) {
             triggerVibration();
-            const inputEl = document.getElementById(`price-${itemName}`);
+            // 直接抓取該按鈕旁邊的 input 元素
+            const inputEl = btnEl.previousElementSibling;
             const newPrice = Number(inputEl.value);
 
             if (isNaN(newPrice) || newPrice < 0) {
@@ -670,7 +659,7 @@
                         price: newPrice
                     })
                 });
-                alert(`✅ 「${itemName}」價格已送出更新為 $${newPrice}！`);
+                alert(`✅ 「${itemName}」價格已成功更新為 $${newPrice}！`);
             } catch (e) {
                 console.error("價格更新寫入失敗", e);
                 alert('⚠️ 網路異常，價格寫入失敗！');
