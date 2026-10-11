@@ -493,8 +493,16 @@
             const newStatus = storeIsOpen ? '營業中' : '暫停營業';
 
             try {
-                const url = `${GAS_WEB_APP_URL}?action=updateStatus&name=${encodeURIComponent('平台開關')}&val=${encodeURIComponent(newStatus)}`;
-                await fetch(url);
+                await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'updateStatus',
+                        name: '平台開關',
+                        status: newStatus
+                    })
+                });
             } catch (e) {
                 console.error("全店狀態更新失敗", e);
             }
@@ -628,7 +636,7 @@
             });
         }
 
-        // 💰 即時更新價格（使用 GET 帶參數，百分之百確實寫入 D 欄）
+        // 💰 即時更新價格 (POST no-cors)
         async function updateItemPrice(btnEl, itemName) {
             triggerVibration();
             const inputEl = btnEl.previousElementSibling;
@@ -640,15 +648,24 @@
             }
 
             try {
-                const url = `${GAS_WEB_APP_URL}?action=updatePrice&name=${encodeURIComponent(itemName)}&val=${newPrice}`;
-                await fetch(url);
-                alert(`✅ 「${itemName}」價格已成功更新為 $${newPrice}！`);
+                await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'updatePrice',
+                        name: itemName,
+                        price: newPrice
+                    })
+                });
+                alert(`✅ 「${itemName}」價格已送出更新為 $${newPrice}！`);
             } catch (e) {
                 console.error("價格更新寫入失敗", e);
                 alert('⚠️ 網路異常，價格寫入失敗！');
             }
         }
 
+        // 🎯 即時切換狀態 (POST no-cors)
         async function toggleItemStatus(btn, itemName) {
             triggerVibration();
             const isCurrentlySoldOut = btn.classList.contains('off');
@@ -666,8 +683,16 @@
             }
 
             try {
-                const url = `${GAS_WEB_APP_URL}?action=updateStatus&name=${encodeURIComponent(itemName)}&val=${encodeURIComponent(newStatus)}`;
-                await fetch(url);
+                await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'updateStatus',
+                        name: itemName,
+                        status: newStatus
+                    })
+                });
             } catch (e) {
                 console.error("狀態更新寫入失敗", e);
             }
