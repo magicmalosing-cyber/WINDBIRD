@@ -629,7 +629,7 @@
             });
         }
 
-        // 💰 即時更新價格 (GET 帶防快取參數)
+       // 💰 即時更新價格
         async function updateItemPrice(btnEl, itemName) {
             triggerVibration();
             const inputEl = btnEl.previousElementSibling;
@@ -642,8 +642,14 @@
 
             try {
                 const url = `${GAS_WEB_APP_URL}?action=updatePrice&name=${encodeURIComponent(itemName)}&val=${newPrice}&t=${Date.now()}`;
-                await fetch(url);
-                alert(`✅ 「${itemName}」價格已成功更新為 $${newPrice}！`);
+                const res = await fetch(url);
+                const json = await res.json();
+                
+                if (json.success) {
+                    alert(`✅ 「${itemName}」價格已成功更新為 $${newPrice}！`);
+                } else {
+                    alert('⚠️ 寫入失敗，請稍後再試！');
+                }
             } catch (e) {
                 console.error("價格更新寫入失敗", e);
                 alert('⚠️ 網路異常，價格寫入失敗！');
