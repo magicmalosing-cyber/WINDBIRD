@@ -3,47 +3,207 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>風鳥堂 - 店鋪即時庫存/缺貨管理</title>
+    <title>風鳥堂 - 店鋪即時缺貨管理後台</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
             --primary: #1e3a8a;
+            --primary-light: #3b82f6;
             --accent: #d97706;
             --bg-light: #f8fafc;
             --text-dark: #1e293b;
+            --text-muted: #64748b;
             --border-color: #e2e8f0;
             --radius: 12px;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background-color: var(--bg-light); color: var(--text-dark); padding-bottom: 50px; }
-        header { background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); color: white; padding: 1.5rem 1rem; text-align: center; }
-        .container { max-width: 600px; margin: 0 auto; padding: 1rem; }
-        .info-box { background: #fef3c7; border: 1px solid #fde68a; color: #92400e; padding: 0.75rem 1rem; border-radius: var(--radius); font-size: 0.9rem; margin-bottom: 1rem; text-align: center; font-weight: bold; }
-        
-        .category-title { font-size: 1.1rem; font-weight: bold; color: var(--primary); margin: 1.2rem 0 0.5rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.3rem; }
-        
-        .item-row { background: white; border-radius: var(--radius); padding: 0.85rem 1rem; margin-bottom: 0.6rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
-        .item-name { font-weight: bold; font-size: 1rem; }
-        .item-price { font-size: 0.85rem; color: var(--accent); margin-top: 0.1rem; }
-        
-        /* 切換開關按鈕 */
-        .toggle-btn { padding: 0.5rem 1.2rem; border-radius: 20px; font-weight: bold; font-size: 0.9rem; border: none; cursor: pointer; transition: all 0.2s; }
-        .toggle-btn.on { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
-        .toggle-btn.off { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
-        
-        .loading { text-align: center; padding: 3rem; color: #64748b; font-size: 1.1rem; }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            padding-bottom: 40px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+            color: white;
+            padding: 1.2rem 1rem;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+        }
+
+        .header-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+
+        .header-subtitle {
+            font-size: 0.8rem;
+            opacity: 0.85;
+            margin-top: 0.2rem;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 0.75rem 1rem;
+        }
+
+        /* 頂部大品項橫列（橫向滑動選單） */
+        .category-nav {
+            display: flex;
+            overflow-x: auto;
+            white-space: nowrap;
+            padding: 0.6rem 0.2rem;
+            margin-bottom: 1rem;
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+            position: sticky;
+            top: 68px;
+            z-index: 15;
+            border: 1px solid var(--border-color);
+        }
+
+        .category-nav::-webkit-scrollbar {
+            display: none;
+        }
+
+        .category-btn {
+            background: #f1f5f9;
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-radius: 20px;
+            margin: 0 0.25rem;
+            flex-shrink: 0;
+        }
+
+        .category-btn.active, .category-btn:hover {
+            color: white;
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        /* 區塊標題 */
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            margin: 1.2rem 0 0.6rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.4rem;
+        }
+
+        /* 品項列表卡片（直列） */
+        .item-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 0.85rem 1rem;
+            margin-bottom: 0.6rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+            border: 1px solid var(--border-color);
+            transition: background 0.2s;
+        }
+
+        .item-card.is-sold-out {
+            background-color: #fef2f2;
+            border-color: #fecaca;
+        }
+
+        .item-info {
+            flex: 1;
+            padding-right: 0.5rem;
+        }
+
+        .item-name {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--text-dark);
+        }
+
+        .item-price {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-top: 0.1rem;
+        }
+
+        /* 開關按鈕設計 */
+        .toggle-btn {
+            padding: 0.55rem 1.1rem;
+            border-radius: 25px;
+            font-weight: 800;
+            font-size: 0.85rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            min-width: 100px;
+            justify-content: center;
+        }
+
+        .toggle-btn.on {
+            background-color: #dcfce7;
+            color: #15803d;
+            border: 1.5px solid #86efac;
+        }
+
+        .toggle-btn.off {
+            background-color: #ef4444;
+            color: white;
+            border: 1.5px solid #dc2626;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+        }
+
+        .loading-box {
+            text-align: center;
+            padding: 3rem;
+            font-size: 1rem;
+            color: var(--text-muted);
+        }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>⚡ 風鳥堂即時缺貨管理</h1>
-        <p style="font-size: 0.85rem; opacity: 0.8; margin-top: 0.3rem;">點擊按鈕即時切換，顧客點餐網頁秒同步！</p>
+        <div class="header-title">⚡ 風鳥堂 - 即時缺貨開關控制台</div>
+        <div class="header-subtitle">點擊按鈕即時切換，顧客線上點餐網頁秒同步</div>
     </header>
 
     <div class="container">
-        <div class="info-box">💡 提示：點擊右側按鈕可直接切換「供應中 / 已售完」</div>
-        <div id="adminMenuContainer" class="loading"><i class="fa-solid fa-spinner fa-spin"></i> 正在載入商品清單...</div>
+        <!-- 頂部大品項橫列選單 -->
+        <nav class="category-nav" id="categoryNav">
+            <button class="category-btn active">載入中...</button>
+        </nav>
+
+        <!-- 依分類呈現的商品直列區塊 -->
+        <div id="adminMenuContainer">
+            <div class="loading-box"><i class="fa-solid fa-spinner fa-spin"></i> 菜單清單載入中...</div>
+        </div>
     </div>
 
     <script>
@@ -74,61 +234,123 @@
                     if (catId === 'system' || !rawName || rawName.includes('平台開關')) return;
 
                     if (!categoriesMap[catId]) {
-                        categoriesMap[catId] = { title: catTitle, items: [] };
+                        categoriesMap[catId] = { id: catId, title: catTitle, items: [] };
                     }
                     categoriesMap[catId].items.push({ name: rawName, price, status });
                 });
 
                 adminMenuData = Object.values(categoriesMap);
+                renderCategoryNav();
                 renderAdminUI();
+                setupScrollspy();
             } catch (err) {
                 console.error(err);
-                document.getElementById('adminMenuContainer').innerHTML = '❌ 載入清單失敗，請檢查網路或試算表權限。';
+                document.getElementById('adminMenuContainer').innerHTML = '❌ 載入清單失敗，請確認網路連線與試算表權限。';
             }
         }
 
+        // 渲染大品項橫滑導覽列
+        function renderCategoryNav() {
+            const nav = document.getElementById('categoryNav');
+            let navHtml = `<button class="category-btn active" data-cat="all" onclick="scrollToCategory('all')">全部品項</button>`;
+            adminMenuData.forEach(cat => {
+                let shortTitle = cat.title.split('（')[0].split('(')[0].trim();
+                navHtml += `<button class="category-btn" data-cat="${cat.id}" onclick="scrollToCategory('${cat.id}')">${shortTitle}</button>`;
+            });
+            nav.innerHTML = navHtml;
+        }
+
+        // 渲染商品分類與直列卡片
         function renderAdminUI() {
             const container = document.getElementById('adminMenuContainer');
             container.innerHTML = '';
 
             adminMenuData.forEach(cat => {
-                const titleDiv = document.createElement('div');
-                titleDiv.className = 'category-title';
-                titleDiv.innerText = cat.title;
-                container.appendChild(titleDiv);
+                const section = document.createElement('section');
+                section.id = cat.id;
+                section.className = 'menu-section';
 
-                cat.items.forEach(item => {
+                let itemsHtml = cat.items.map(item => {
                     const isSoldOut = item.status === '售完';
-                    const row = document.createElement('div');
-                    row.className = 'item-row';
-                    row.innerHTML = `
-                        <div>
-                            <div class="item-name">${item.name}</div>
-                            <div class="item-price">$${item.price}</div>
+                    return `
+                        <div class="item-card ${isSoldOut ? 'is-sold-out' : ''}">
+                            <div class="item-info">
+                                <div class="item-name">${item.name}</div>
+                                <div class="item-price">$${item.price}</div>
+                            </div>
+                            <button class="toggle-btn ${isSoldOut ? 'off' : 'on'}" onclick="toggleItemStatus(this, '${item.name}')">
+                                ${isSoldOut ? '<i class="fa-solid fa-circle-xmark"></i> 已售完' : '<i class="fa-solid fa-circle-check"></i> 供應中'}
+                            </button>
                         </div>
-                        <button class="toggle-btn ${isSoldOut ? 'off' : 'on'}" onclick="toggleItemStatus(this, '${item.name}')">
-                            ${isSoldOut ? '🔴 已售完' : '🟢 供應中'}
-                        </button>
                     `;
-                    container.appendChild(row);
+                }).join('');
+
+                section.innerHTML = `
+                    <div class="section-title">${cat.title}</div>
+                    <div>${itemsHtml}</div>
+                `;
+                container.appendChild(section);
+            });
+        }
+
+        // 快速滑動至指定大品項
+        function scrollToCategory(id) {
+            if (id === 'all') {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return;
+            }
+            const el = document.getElementById(id);
+            if (el) {
+                const yOffset = -120;
+                const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                window.scrollTo({ top: y, behavior: 'smooth' });
+            }
+        }
+
+        // 監聽滾動同步亮燈大品項按鈕
+        function setupScrollspy() {
+            window.addEventListener('scroll', () => {
+                const sections = document.querySelectorAll('.menu-section');
+                const navBtns = document.querySelectorAll('.category-btn');
+                let currentCat = 'all';
+
+                sections.forEach(sec => {
+                    const top = sec.offsetTop - 140;
+                    if (window.scrollY >= top) {
+                        currentCat = sec.id;
+                    }
+                });
+
+                if (window.scrollY < 80) currentCat = 'all';
+
+                navBtns.forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.getAttribute('data-cat') === currentCat) {
+                        btn.classList.add('active');
+                        btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                    }
                 });
             });
         }
 
+        // 切換狀態寫回 GAS
         async function toggleItemStatus(btn, itemName) {
             const isCurrentlySoldOut = btn.classList.contains('off');
             const newStatus = isCurrentlySoldOut ? '上架' : '售完';
+            const card = btn.closest('.item-card');
 
-            // 畫面即時切換狀態（不需等待重整）
+            // 畫面零時差先變色反應
             if (newStatus === '售完') {
                 btn.className = 'toggle-btn off';
-                btn.innerText = '🔴 已售完';
+                btn.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> 已售完';
+                card.classList.add('is-sold-out');
             } else {
                 btn.className = 'toggle-btn on';
-                btn.innerText = '🟢 供應中';
+                btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> 供應中';
+                card.classList.remove('is-sold-out');
             }
 
-            // 發送請求到 GAS 背景更新試算表
+            // 背景非同步傳送更新
             try {
                 await fetch(GAS_WEB_APP_URL, {
                     method: 'POST',
@@ -141,12 +363,12 @@
                     })
                 });
             } catch (e) {
-                console.error("更新失敗", e);
-                alert('⚠️ 網路異常，狀態更新可能未成功寫入雲端');
+                console.error("狀態更新寫入失敗", e);
+                alert('⚠️ 網路異常，請確認狀態是否已寫入試算表！');
             }
         }
 
-        // 初始化載入
+        // 初始化
         fetchAdminMenu();
     </script>
 </body>
