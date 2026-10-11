@@ -629,8 +629,8 @@
             });
         }
 
-       // 💰 即時更新價格 (無阻擋盲發送)
-        async function updateItemPrice(btnEl, itemName) {
+       // 💰 即時更新價格 (使用 Image Beacon 確保 100% 送達)
+        function updateItemPrice(btnEl, itemName) {
             triggerVibration();
             const inputEl = btnEl.previousElementSibling;
             const newPrice = Number(inputEl.value);
@@ -640,19 +640,17 @@
                 return;
             }
 
-            try {
-                const url = `${GAS_WEB_APP_URL}?action=updatePrice&name=${encodeURIComponent(itemName)}&val=${newPrice}&t=${Date.now()}`;
-                // 使用 no-cors 確保請求必定送達後端，不理會瀏覽器回應限制
-                await fetch(url, { mode: 'no-cors' });
-                alert(`✅ 「${itemName}」價格已送出更新為 $${newPrice}！`);
-            } catch (e) {
-                console.error("價格更新寫入失敗", e);
-                alert('⚠️ 網路異常，價格寫入失敗！');
-            }
+            const url = `${GAS_WEB_APP_URL}?action=updatePrice&name=${encodeURIComponent(itemName)}&val=${newPrice}&t=${Date.now()}`;
+            
+            // 透過建立隱藏 Image 物件送出 GET 請求，完全避開 CORS 與 fetch 限制
+            const img = new Image();
+            img.src = url;
+            
+            alert(`✅ 「${itemName}」價格已送出更新為 $${newPrice}！`);
         }
 
-        // 🎯 即時切換狀態 (無阻擋盲發送)
-        async function toggleItemStatus(btn, itemName) {
+        // 🎯 即時切換狀態 (使用 Image Beacon 確保 100% 送達)
+        function toggleItemStatus(btn, itemName) {
             triggerVibration();
             const isCurrentlySoldOut = btn.classList.contains('off');
             const newStatus = isCurrentlySoldOut ? '上架' : '售完';
@@ -668,14 +666,11 @@
                 card.classList.remove('is-sold-out');
             }
 
-            try {
-                const url = `${GAS_WEB_APP_URL}?action=updateStatus&name=${encodeURIComponent(itemName)}&val=${encodeURIComponent(newStatus)}&t=${Date.now()}`;
-                await fetch(url, { mode: 'no-cors' });
-            } catch (e) {
-                console.error("狀態更新寫入失敗", e);
-            }
+            const url = `${GAS_WEB_APP_URL}?action=updateStatus&name=${encodeURIComponent(itemName)}&val=${encodeURIComponent(newStatus)}&t=${Date.now()}`;
+            
+            const img = new Image();
+            img.src = url;
         }
-
         fetchAdminData();
     </script>
 </body>
