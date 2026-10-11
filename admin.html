@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>風鳥堂 - 店鋪即時庫存/缺貨管理</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --accent: #d97706;
+            --bg-light: #f8fafc;
+            --text-dark: #1e293b;
+            --border-color: #e2e8f0;
+            --radius: 12px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: var(--bg-light); color: var(--text-dark); padding-bottom: 50px; }
+        header { background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); color: white; padding: 1.5rem 1rem; text-align: center; }
+        .container { max-width: 600px; margin: 0 auto; padding: 1rem; }
+        .info-box { background: #fef3c7; border: 1px solid #fde68a; color: #92400e; padding: 0.75rem 1rem; border-radius: var(--radius); font-size: 0.9rem; margin-bottom: 1rem; text-align: center; font-weight: bold; }
+        
+        .category-title { font-size: 1.1rem; font-weight: bold; color: var(--primary); margin: 1.2rem 0 0.5rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.3rem; }
+        
+        .item-row { background: white; border-radius: var(--radius); padding: 0.85rem 1rem; margin-bottom: 0.6rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
+        .item-name { font-weight: bold; font-size: 1rem; }
+        .item-price { font-size: 0.85rem; color: var(--accent); margin-top: 0.1rem; }
+        
+        /* 切換開關按鈕 */
+        .toggle-btn { padding: 0.5rem 1.2rem; border-radius: 20px; font-weight: bold; font-size: 0.9rem; border: none; cursor: pointer; transition: all 0.2s; }
+        .toggle-btn.on { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .toggle-btn.off { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+        
+        .loading { text-align: center; padding: 3rem; color: #64748b; font-size: 1.1rem; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>⚡ 風鳥堂即時缺貨管理</h1>
+        <p style="font-size: 0.85rem; opacity: 0.8; margin-top: 0.3rem;">點擊按鈕即時切換，顧客點餐網頁秒同步！</p>
+    </header>
+
+    <div class="container">
+        <div class="info-box">💡 提示：點擊右側按鈕可直接切換「供應中 / 已售完」</div>
+        <div id="adminMenuContainer" class="loading"><i class="fa-solid fa-spinner fa-spin"></i> 正在載入商品清單...</div>
+    </div>
+
+    <script>
+        const SPREADSHEET_ID = '1_5ynzti6fA6RUq5UUjB28oxw2u2eFMs4RiGRzUmKvQU';
+        const MENU_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
+        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxpuB_w20nq4ZtldzABmuVqu-iUUgDFW1nBQpuFP2j_8Yj2cv7qla-atfDfCWDFxxb5RA/exec';
+
+        let adminMenuData = [];
+
+        async function fetchAdminMenu() {
+            try {
+                const res = await fetch(MENU_SHEET_URL);
+                const text = await res.text();
+                const jsonStr = text.substring(47, text.length - 2);
+                const json = JSON.parse(jsonStr);
+                
+                const categoriesMap = {};
+
+                json.table.rows.forEach(row => {
+                    const c = row.c;
+                    if (!c) return;
+                    const catId = c[0] ? String(c[0].v || '') : '';
+                    const catTitle = c[1] ? String(c[1].v || '') : '';
+                    const rawName = c[2] ? String(c[2].v || '') : '';
+                    const price = c[3] ? Number(c[3].v || 0) : 0;
+                    const status = c[5] ? String(c[5].v || '上架') : '上架';
+
+                    if (catId === 'system' || !rawName || rawName.includes('平台開關')) return;
+
+                    if (!categoriesMap[catId]) {
+                        categoriesMap[catId] = { title: catTitle, items: [] };
+                    }
+                    categoriesMap[catId].items.push({ name: rawName, price, status });
+                });
+
+                adminMenuData = Object.values(categoriesMap);
+                renderAdminUI();
+            } catch (err) {
+                console.error(err);
+                document.getElementById('adminMenuContainer').innerHTML = '❌ 載入清單失敗，請檢查網路或試算表權限。';
+            }
+        }
+
+        function renderAdminUI() {
+            const container = document.getElementById('adminMenuContainer');
+            container.innerHTML = '';
+
+            adminMenuData.forEach(cat => {
+                const titleDiv = document.createElement('div');
+                titleDiv.className = 'category-title';
+                titleDiv.innerText = cat.title;
+                container.appendChild(titleDiv);
+
+                cat.items.forEach(item => {
+                    const isSoldOut = item.status === '售完';
+                    const row = document.createElement('div');
+                    row.className = 'item-row';
+                    row.innerHTML = `
+                        <div>
+                            <div class="item-name">${item.name}</div>
+                            <div class="item-price">$${item.price}</div>
+                        </div>
+                        <button class="toggle-btn ${isSoldOut ? 'off' : 'on'}" onclick="toggleItemStatus(this, '${item.name}')">
+                            ${isSoldOut ? '🔴 已售完' : '🟢 供應中'}
+                        </button>
+                    `;
+                    container.appendChild(row);
+                });
+            });
+        }
+
+        async function toggleItemStatus(btn, itemName) {
+            const isCurrentlySoldOut = btn.classList.contains('off');
+            const newStatus = isCurrentlySoldOut ? '上架' : '售完';
+
+            // 畫面即時切換狀態（不需等待重整）
+            if (newStatus === '售完') {
+                btn.className = 'toggle-btn off';
+                btn.innerText = '🔴 已售完';
+            } else {
+                btn.className = 'toggle-btn on';
+                btn.innerText = '🟢 供應中';
+            }
+
+            // 發送請求到 GAS 背景更新試算表
+            try {
+                await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'updateStatus',
+                        name: itemName,
+                        status: newStatus
+                    })
+                });
+            } catch (e) {
+                console.error("更新失敗", e);
+                alert('⚠️ 網路異常，狀態更新可能未成功寫入雲端');
+            }
+        }
+
+        // 初始化載入
+        fetchAdminMenu();
+    </script>
+</body>
+</html>
