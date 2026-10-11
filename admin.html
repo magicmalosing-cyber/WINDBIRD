@@ -60,18 +60,48 @@
             padding: 1rem 0.75rem;
         }
 
-        /* 全店總開關區塊 */
+        /* 📦 今日營運快覽小看板 */
+        .stats-dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: var(--radius);
+            padding: 1rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            border: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        .stat-value {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-top: 0.2rem;
+        }
+
+        /* 🎯 全店總開關卡片 */
         .store-master-card {
             background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
             color: white;
             border-radius: var(--radius);
             padding: 1.2rem 1.5rem;
-            margin-bottom: 1.2rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border: 2px solid #334155;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            border: 2px solid #334155;
         }
 
         .store-master-info h3 {
@@ -89,19 +119,20 @@
         }
 
         .master-toggle-btn {
-            padding: 0.75rem 1.5rem;
-            border-radius: 14px;
+            padding: 0.75rem 1.4rem;
+            border-radius: 12px;
             font-weight: 800;
-            font-size: 1.05rem;
+            font-size: 1rem;
             border: none;
             cursor: pointer;
             transition: all 0.2s ease;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.4rem;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            min-width: 140px;
+            min-width: 130px;
             justify-content: center;
+            flex-shrink: 0;
         }
 
         .master-toggle-btn.open {
@@ -116,7 +147,38 @@
             border: 2px solid #f87171;
         }
 
-        /* 頂部大品項：多行自動平鋪 */
+        /* 🔍 搜尋列樣式 */
+        .search-box-wrapper {
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.85rem 1rem 0.85rem 2.8rem;
+            font-size: 1rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            background: white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        /* 頂部大品項導覽 */
         .category-nav {
             display: flex;
             flex-wrap: wrap;
@@ -243,12 +305,24 @@
 <body>
 
     <header>
-        <div class="header-title">⚡ 風鳥堂 - 即時缺貨開關控制台</div>
-        <div class="header-subtitle">店鋪總開關與品項即時控管</div>
+        <div class="header-title">⚡ 風鳥堂 - 即時缺貨管理後台</div>
+        <div class="header-subtitle">店鋪總開關、品項搜尋與即時營運監控</div>
     </header>
 
     <div class="container">
-        <!-- 🎯 全店總開關控制卡片 -->
+        <!-- 📦 今日營運快覽小看板 -->
+        <div class="stats-dashboard">
+            <div class="stat-card">
+                <div class="stat-label"><i class="fa-solid fa-receipt"></i> 今日已接單數</div>
+                <div class="stat-value" id="todayOrdersCount">0 筆</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label"><i class="fa-solid fa-sack-dollar"></i> 今日營業總額</div>
+                <div class="stat-value" id="todayRevenue">$0</div>
+            </div>
+        </div>
+
+        <!-- 🎯 全店總開關卡片 -->
         <div class="store-master-card" id="storeMasterCard">
             <div class="store-master-info">
                 <h3><i class="fa-solid fa-store"></i> 全店線上點餐狀態</h3>
@@ -259,32 +333,42 @@
             </button>
         </div>
 
+        <!-- 🔍 品項關鍵字搜尋列 -->
+        <div class="search-box-wrapper">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="searchInput" class="search-input" placeholder="輸入品項名稱快速搜尋（例如：紅茶、珍珠、拿鐵）..." oninput="filterMenuItems()">
+        </div>
+
         <!-- 頂部大品項導覽 -->
         <nav class="category-nav" id="categoryNav">
-            <button class="category-btn active">載入中...</button>
+            <button class="category-btn active" id="allCatBtn" onclick="scrollToCategory('all')">全部品項</button>
         </nav>
 
         <!-- 商品分類清單 -->
         <div id="adminMenuContainer">
-            <div class="loading-box"><i class="fa-solid fa-spinner fa-spin"></i> 菜單與加料清單載入中...</div>
+            <div class="loading-box"><i class="fa-solid fa-spinner fa-spin"></i> 菜單與營運數據載入中...</div>
         </div>
     </div>
 
     <script>
         const SPREADSHEET_ID = '1_5ynzti6fA6RUq5UUjB28oxw2u2eFMs4RiGRzUmKvQU';
         const MENU_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
+        const ORDERS_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=訂單紀錄`;
         const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxpuB_w20nq4ZtldzABmuVqu-iUUgDFW1nBQpuFP2j_8Yj2cv7qla-atfDfCWDFxxb5RA/exec';
 
         let adminMenuData = [];
         let storeIsOpen = true;
 
-        async function fetchAdminMenu() {
+        async function fetchAdminData() {
             try {
-                const res = await fetch(MENU_SHEET_URL);
-                const text = await res.text();
-                const jsonStr = text.substring(47, text.length - 2);
+                const [menuRes, ordersRes] = await Promise.all([
+                    fetch(MENU_SHEET_URL).then(r => r.text()),
+                    fetch(ORDERS_SHEET_URL).then(r => r.text()).catch(() => null)
+                ]);
+
+                // 1. 解析菜單
+                const jsonStr = menuRes.substring(47, menuRes.length - 2);
                 const json = JSON.parse(jsonStr);
-                
                 const categoriesMap = {};
 
                 json.table.rows.forEach(row => {
@@ -296,7 +380,6 @@
                     const price = c[3] ? Number(c[3].v || 0) : 0;
                     const status = c[5] ? String(c[5].v || '上架') : '上架';
 
-                    // 抓取全店平台開關狀態
                     if (rawName === '平台開關' || catId === 'system') {
                         storeIsOpen = (status === '營業中' || status === '上架');
                         updateStoreMasterUI();
@@ -315,13 +398,47 @@
                 renderCategoryNav();
                 renderAdminUI();
                 setupScrollspy();
+
+                // 2. 解析今日訂單統計
+                if (ordersRes) {
+                    parseTodayStats(ordersRes);
+                }
+
             } catch (err) {
                 console.error(err);
                 document.getElementById('adminMenuContainer').innerHTML = '❌ 載入清單失敗，請確認網路連線與試算表權限。';
             }
         }
 
-        // 更新全店總開關畫面
+        // 計算今日訂單數與總金額
+        function parseTodayStats(ordersText) {
+            try {
+                const topJsonStr = ordersText.substring(47, ordersText.length - 2);
+                const ordersJson = JSON.parse(topJsonStr);
+                
+                const todayStr = '2026-10-11'; // 對應今日日期
+                let count = 0;
+                let revenue = 0;
+
+                ordersJson.table.rows.forEach(row => {
+                    const c = row.c;
+                    if (!c || !c[0] || !c[0].v) return;
+                    
+                    const timeVal = String(c[0].v);
+                    if (timeVal.includes(todayStr) || timeVal.includes('10/11')) {
+                        count++;
+                        const totalCol = c[6] ? Number(c[6].v || 0) : 0;
+                        revenue += totalCol;
+                    }
+                });
+
+                document.getElementById('todayOrdersCount').innerText = `${count} 筆`;
+                document.getElementById('todayRevenue').innerText = `$${revenue.toLocaleString()}`;
+            } catch (e) {
+                console.warn("計算今日營運數據失敗", e);
+            }
+        }
+
         function updateStoreMasterUI() {
             const btn = document.getElementById('masterToggleBtn');
             const statusText = document.getElementById('storeMasterStatusText');
@@ -340,8 +457,8 @@
             }
         }
 
-        // 點擊切換全店總開關
         async function toggleStoreStatus() {
+            triggerVibration();
             storeIsOpen = !storeIsOpen;
             updateStoreMasterUI();
             const newStatus = storeIsOpen ? '營業中' : '暫停營業';
@@ -361,6 +478,40 @@
                 console.error("全店狀態更新失敗", e);
                 alert('⚠️ 網路異常，全店狀態同步失敗！');
             }
+        }
+
+        // 🔍 即時關鍵字搜尋過濾功能
+        function filterMenuItems() {
+            const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+            const sections = document.querySelectorAll('.menu-section');
+            const nav = document.getElementById('categoryNav');
+
+            if (keyword !== '') {
+                nav.style.display = 'none'; // 搜尋時隱藏分類導覽列
+            } else {
+                nav.style.display = 'flex';
+            }
+
+            sections.forEach(section => {
+                const cards = section.querySelectorAll('.item-card');
+                let hasVisibleCard = false;
+
+                cards.forEach(card => {
+                    const itemName = card.querySelector('.item-name').innerText.toLowerCase();
+                    if (itemName.includes(keyword)) {
+                        card.style.display = 'flex';
+                        hasVisibleCard = true;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+
+                if (hasVisibleCard) {
+                    section.style.display = 'block';
+                } else {
+                    section.style.display = 'none';
+                }
+            });
         }
 
         function renderCategoryNav() {
@@ -405,7 +556,17 @@
             });
         }
 
+        // 輕微震動反饋
+        function triggerVibration() {
+            if (navigator.vibrate) {
+                navigator.vibrate(40);
+            }
+        }
+
         function scrollToCategory(id) {
+            document.getElementById('searchInput').value = ''; // 點分類時清空搜尋
+            filterMenuItems();
+
             if (id === 'all') {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
                 return;
@@ -421,6 +582,8 @@
 
         function setupScrollspy() {
             window.addEventListener('scroll', () => {
+                if (document.getElementById('searchInput').value.trim() !== '') return;
+
                 const sections = document.querySelectorAll('.menu-section');
                 const navBtns = document.querySelectorAll('.category-btn');
                 let currentCat = 'all';
@@ -444,6 +607,7 @@
         }
 
         async function toggleItemStatus(btn, itemName) {
+            triggerVibration(); // 點擊時手機震動反饋
             const isCurrentlySoldOut = btn.classList.contains('off');
             const newStatus = isCurrentlySoldOut ? '上架' : '售完';
             const card = btn.closest('.item-card');
@@ -469,13 +633,4 @@
                         status: newStatus
                     })
                 });
-            } catch (e) {
-                console.error("狀態更新寫入失敗", e);
-                alert('⚠️ 網路異常，請確認狀態是否已寫入試算表！');
-            }
-        }
-
-        fetchAdminMenu();
-    </script>
-</body>
-</html>
+            } catch (e)
