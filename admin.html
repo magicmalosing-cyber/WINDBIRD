@@ -60,6 +60,63 @@
             padding: 1rem 0.75rem;
         }
 
+        /* 全店總開關區塊 */
+        .store-master-card {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            border-radius: var(--radius);
+            padding: 1.2rem 1.5rem;
+            margin-bottom: 1.2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border: 2px solid #334155;
+        }
+
+        .store-master-info h3 {
+            font-size: 1.15rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .store-master-info p {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            margin-top: 0.2rem;
+        }
+
+        .master-toggle-btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 14px;
+            font-weight: 800;
+            font-size: 1.05rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            min-width: 140px;
+            justify-content: center;
+        }
+
+        .master-toggle-btn.open {
+            background-color: #22c55e;
+            color: white;
+            border: 2px solid #4ade80;
+        }
+
+        .master-toggle-btn.closed {
+            background-color: #ef4444;
+            color: white;
+            border: 2px solid #f87171;
+        }
+
+        /* 頂部大品項：多行自動平鋪 */
         .category-nav {
             display: flex;
             flex-wrap: wrap;
@@ -187,14 +244,27 @@
 
     <header>
         <div class="header-title">⚡ 風鳥堂 - 即時缺貨開關控制台</div>
-        <div class="header-subtitle">點擊按鈕即時切換，包含飲品與加料區，網頁秒同步</div>
+        <div class="header-subtitle">店鋪總開關與品項即時控管</div>
     </header>
 
     <div class="container">
+        <!-- 🎯 全店總開關控制卡片 -->
+        <div class="store-master-card" id="storeMasterCard">
+            <div class="store-master-info">
+                <h3><i class="fa-solid fa-store"></i> 全店線上點餐狀態</h3>
+                <p id="storeMasterStatusText">讀取中...</p>
+            </div>
+            <button id="masterToggleBtn" class="master-toggle-btn open" onclick="toggleStoreStatus()">
+                <i class="fa-solid fa-spinner fa-spin"></i> 載入中
+            </button>
+        </div>
+
+        <!-- 頂部大品項導覽 -->
         <nav class="category-nav" id="categoryNav">
             <button class="category-btn active">載入中...</button>
         </nav>
 
+        <!-- 商品分類清單 -->
         <div id="adminMenuContainer">
             <div class="loading-box"><i class="fa-solid fa-spinner fa-spin"></i> 菜單與加料清單載入中...</div>
         </div>
@@ -203,24 +273,21 @@
     <script>
         const SPREADSHEET_ID = '1_5ynzti6fA6RUq5UUjB28oxw2u2eFMs4RiGRzUmKvQU';
         const MENU_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
-        const TOPPING_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&gid=1381768995`;
         const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxpuB_w20nq4ZtldzABmuVqu-iUUgDFW1nBQpuFP2j_8Yj2cv7qla-atfDfCWDFxxb5RA/exec';
 
         let adminMenuData = [];
+        let storeIsOpen = true;
 
         async function fetchAdminMenu() {
             try {
-                const [menuRes, toppingRes] = await Promise.all([
-                    fetch(MENU_SHEET_URL).then(r => r.text()),
-                    fetch(TOPPING_SHEET_URL).then(r => r.text()).catch(() => null)
-                ]);
-
-                const menuJsonStr = menuRes.substring(47, menuRes.length - 2);
-                const menuJson = JSON.parse(menuJsonStr);
+                const res = await fetch(MENU_SHEET_URL);
+                const text = await res.text();
+                const jsonStr = text.substring(47, text.length - 2);
+                const json = JSON.parse(jsonStr);
+                
                 const categoriesMap = {};
-                let toppingItems = [];
 
-                menuJson.table.rows.forEach(row => {
+                json.table.rows.forEach(row => {
                     const c = row.c;
                     if (!c) return;
                     const catId = c[0] ? String(c[0].v || '') : '';
@@ -229,53 +296,20 @@
                     const price = c[3] ? Number(c[3].v || 0) : 0;
                     const status = c[5] ? String(c[5].v || '上架') : '上架';
 
-                    if (catId === 'system' || !rawName || rawName.includes('平台開關')) return;
-
-                    if (catId === 'cat-topping' || catTitle.includes('加料')) {
-                        parseToppingsIntoArray(rawName, price, status, toppingItems);
+                    // 抓取全店平台開關狀態
+                    if (rawName === '平台開關' || catId === 'system') {
+                        storeIsOpen = (status === '營業中' || status === '上架');
+                        updateStoreMasterUI();
                         return;
                     }
+
+                    if (!rawName) return;
 
                     if (!categoriesMap[catId]) {
                         categoriesMap[catId] = { id: catId, title: catTitle, items: [] };
                     }
                     categoriesMap[catId].items.push({ name: rawName, price, status });
                 });
-
-                // 處理獨立加料頁籤資料（正確對應 A欄名稱、B欄價格、C欄狀態）
-                if (toppingRes) {
-                    try {
-                        const topJsonStr = toppingRes.substring(47, toppingRes.length - 2);
-                        const topJson = JSON.parse(topJsonStr);
-                        topJson.table.rows.forEach(row => {
-                            const c = row.c;
-                            if (!c) return;
-                            const tName = c[0] ? String(c[0].v || '') : '';
-                            const tPrice = c[1] ? Number(c[1].v || 0) : 0;
-                            const tStatus = c[2] ? String(c[2].v || '上架') : '上架';
-
-                            if (tName && !tName.includes('加料區')) {
-                                if (!toppingItems.some(t => t.name === tName)) {
-                                    toppingItems.push({ name: tName, price: tPrice, status: tStatus });
-                                } else {
-                                    // 更新現有狀態
-                                    const existing = toppingItems.find(t => t.name === tName);
-                                    if (existing) existing.status = tStatus;
-                                }
-                            }
-                        });
-                    } catch (e) {
-                        console.warn("解析獨立加料頁失敗", e);
-                    }
-                }
-
-                if (toppingItems.length > 0) {
-                    categoriesMap['cat-topping-section'] = {
-                        id: 'cat-topping-section',
-                        title: '🟡 加料區（配料選擇）',
-                        items: toppingItems
-                    };
-                }
 
                 adminMenuData = Object.values(categoriesMap);
                 renderCategoryNav();
@@ -287,14 +321,46 @@
             }
         }
 
-        function parseToppingsIntoArray(rawName, price, status, targetArray) {
-            const items = rawName.split(/[/、,]/);
-            items.forEach(item => {
-                const name = item.trim();
-                if (name && !name.includes('加料區') && !targetArray.some(t => t.name === name)) {
-                    targetArray.push({ name, price, status });
-                }
-            });
+        // 更新全店總開關畫面
+        function updateStoreMasterUI() {
+            const btn = document.getElementById('masterToggleBtn');
+            const statusText = document.getElementById('storeMasterStatusText');
+            const card = document.getElementById('storeMasterCard');
+
+            if (storeIsOpen) {
+                btn.className = 'master-toggle-btn open';
+                btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> 營業中';
+                statusText.innerText = '目前正常營業中，顧客可隨時線上點餐';
+                card.style.borderColor = '#16a34a';
+            } else {
+                btn.className = 'master-toggle-btn closed';
+                btn.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> 暫停營業';
+                statusText.innerText = '⚠️ 目前已暫停營業，前端點餐將顯示打烊中';
+                card.style.borderColor = '#dc2626';
+            }
+        }
+
+        // 點擊切換全店總開關
+        async function toggleStoreStatus() {
+            storeIsOpen = !storeIsOpen;
+            updateStoreMasterUI();
+            const newStatus = storeIsOpen ? '營業中' : '暫停營業';
+
+            try {
+                await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'updateStatus',
+                        name: '平台開關',
+                        status: newStatus
+                    })
+                });
+            } catch (e) {
+                console.error("全店狀態更新失敗", e);
+                alert('⚠️ 網路異常，全店狀態同步失敗！');
+            }
         }
 
         function renderCategoryNav() {
@@ -347,7 +413,7 @@
             const el = document.getElementById(id);
             if (el) {
                 const navHeight = document.getElementById('categoryNav').offsetHeight;
-                const yOffset = -(navHeight + 80);
+                const yOffset = -(navHeight + 110);
                 const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
                 window.scrollTo({ top: y, behavior: 'smooth' });
             }
