@@ -196,6 +196,7 @@
             cursor: pointer;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
             border: 1px solid transparent;
+            gap: 12px;
         }
 
         .menu-card.sold-out, .menu-card.store-closed {
@@ -209,9 +210,20 @@
             border-color: var(--primary-light);
         }
 
+        /* 飲料品項縮圖樣式 */
+        .item-thumb {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            object-fit: cover;
+            border: 1px solid var(--border-color);
+            flex-shrink: 0;
+            background: #f1f5f9;
+        }
+
         .item-info {
             flex: 1;
-            padding-right: 1rem;
+            min-width: 0;
         }
 
         .item-name {
@@ -249,6 +261,7 @@
             justify-content: center;
             font-size: 1.1rem;
             transition: all 0.2s;
+            flex-shrink: 0;
         }
 
         .menu-card:not(.sold-out):not(.store-closed):hover .add-btn {
@@ -1055,10 +1068,14 @@
                 let itemsHtml = cat.items.map(item => {
                     const isSoldOut = item.status === '售完';
                     const isCardDisabled = isSoldOut || !isStoreOpen;
+                    
+                    // 自動對應 images 資料夾內的中文檔名（支援常見的 .png 與 .jpg）
+                    const imgPath = `images/${item.name} (1).png`;
 
                     return `
                         <div class="menu-card ${isSoldOut ? 'sold-out' : ''} ${!isStoreOpen ? 'store-closed' : ''}" 
                              onclick="${isCardDisabled ? 'handleClosedClick()' : `openItemModal('${item.name}',${item.price})`}">
+                            <img src="${imgPath}" alt="${item.name}" class="item-thumb" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'60\' height=\'60\' viewBox=\'0 0 60 60\'><rect width=\'60\' height=\'60\' fill=\'%23f1f5f9\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-size=\'10\' fill=\'%2364748b\' font-family=\'sans-serif\'>風鳥堂</text></svg>';">
                             <div class="item-info">
                                 <div class="item-name">${item.name} ${isSoldOut ? '<span class="sold-badge">已售完</span>' : ''}</div>
                                 <div class="item-desc">${item.desc}</div>
