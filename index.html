@@ -786,6 +786,14 @@
         const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxpuB_w20nq4ZtldzABmuVqu-iUUgDFW1nBQpuFP2j_8Yj2cv7qla-atfDfCWDFxxb5RA/exec';
         const LINE_OFFICIAL_ID = '694hwlae';
 
+        // 雲端硬碟圖片 ID 對應表
+        const imageMap = {
+            '招牌風鳥茶': '1c8QdaQem6G4JPpnZttoKMO4MXta1W85r',
+            '熱帶天堂果風鮮綠': '1xOiRprmnuKASlU8FFfv9-ueB8dr4jwNY',
+            '老派拿鐵': '1VPw_9GXUytGqWF7DccZ4yIiBjy3Ue4d9',
+            '玄武黑七榖拿鐵': '1AW1yNzAFIogjRYVv4oex7IBZyQc4_b37'
+        };
+
         let menuData = [];
         let toppingData = [];
         let cart = [];
@@ -1068,14 +1076,15 @@
                 let itemsHtml = cat.items.map(item => {
                     const isSoldOut = item.status === '售完';
                     const isCardDisabled = isSoldOut || !isStoreOpen;
-                    
-                    // 自動對應 images 資料夾內的中文檔名（支援常見的 .png 與 .jpg）
-                    const imgPath = `images/${item.name} (1).png`;
+
+                    // 從對應表取得雲端硬碟圖片的直連網址
+                    const fileId = imageMap[item.name];
+                    const imgPath = fileId ? `https://drive.google.com/uc?export=view&id=${fileId}` : '';
 
                     return `
                         <div class="menu-card ${isSoldOut ? 'sold-out' : ''} ${!isStoreOpen ? 'store-closed' : ''}" 
                              onclick="${isCardDisabled ? 'handleClosedClick()' : `openItemModal('${item.name}',${item.price})`}">
-                            <img src="${imgPath}" alt="${item.name}" class="item-thumb" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'60\' height=\'60\' viewBox=\'0 0 60 60\'><rect width=\'60\' height=\'60\' fill=\'%23f1f5f9\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-size=\'10\' fill=\'%2364748b\' font-family=\'sans-serif\'>風鳥堂</text></svg>';">
+                            ${imgPath ? `<img src="${imgPath}" alt="${item.name}" class="item-thumb" onerror="this.style.display='none';">` : ''}
                             <div class="item-info">
                                 <div class="item-name">${item.name} ${isSoldOut ? '<span class="sold-badge">已售完</span>' : ''}</div>
                                 <div class="item-desc">${item.desc}</div>
@@ -1393,7 +1402,7 @@
             const phone = document.getElementById('custPhone').value.trim();
 
             if (!name || !phone) {
-                alert('請填寫姓名與聯絡電話！');
+                alert('请填寫姓名與聯絡電話！');
                 return;
             }
 
