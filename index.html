@@ -210,7 +210,6 @@
             border-color: var(--primary-light);
         }
 
-        /* 飲料品項縮圖樣式 */
         .item-thumb {
             width: 60px;
             height: 60px;
@@ -745,7 +744,7 @@
                 <button class="pay-tab-btn" id="btnTabJko" onclick="switchPayTab('jko')">街口支付</button>
             </div>
 
-            <!-- LINE Pay 付款區塊 (一鍵自動背景送單並跳轉) -->
+            <!-- LINE Pay 付款區塊 (修正版：直接順暢跳轉 LINE 發送明細) -->
             <div class="qr-box" id="payBoxLinePay">
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.6rem;">
                     請先點擊複製金額，開啟 LINE Pay 後直接貼上：
@@ -1070,7 +1069,6 @@
                     const isSoldOut = item.status === '售完';
                     const isCardDisabled = isSoldOut || !isStoreOpen;
 
-                    // 從對應表取得雲端硬碟圖片的直連網址
                     const fileId = imageMap[item.name];
                     const imgPath = fileId ? `https://drive.google.com/uc?export=view&id=${fileId}` : '';
 
@@ -1499,7 +1497,7 @@
             }
         }
 
-        // LINE Pay 專用：自動背景送單並跳轉
+        // LINE Pay 專用：修正為單一順暢跳轉，100% 避免手機瀏覽器阻擋
         async function handleAutoPayAndSubmit(payUrl) {
             if (!isStoreOpen) {
                 alert('目前為非營業時間，無法送出訂單！');
@@ -1593,8 +1591,8 @@
             updateCart();
             closeModal('payModal');
 
-            window.open(lineUrl, '_blank');
-            window.location.href = payUrl;
+            // 單一跳轉至 LINE 帶入訂單文字
+            window.location.href = lineUrl;
         }
 
         // 街口支付專用：手動點擊送出訂單
