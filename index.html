@@ -744,7 +744,7 @@
                 <button class="pay-tab-btn" id="btnTabJko" onclick="switchPayTab('jko')">街口支付</button>
             </div>
 
-            <!-- LINE Pay 付款區塊 (方案B：訊息內嵌付款連結版) -->
+            <!-- LINE Pay 付款區塊 (修正版：背景傳送通知給您 + 內嵌付款連結跳轉 LINE) -->
             <div class="qr-box" id="payBoxLinePay">
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.6rem;">
                     請先點擊複製金額，開啟 LINE Pay 後直接貼上：
@@ -1497,7 +1497,7 @@
             }
         }
 
-        // LINE Pay 專用：自動把付款連結寫進 LINE 訊息文字中，直接跳轉發送
+        // LINE Pay 專用：加入 keepalive 確保 GAS 背景通知送達，並帶入付款連結跳轉
         async function handleAutoPayAndSubmit(payUrl) {
             if (!isStoreOpen) {
                 alert('目前為非營業時間，無法送出訂單！');
@@ -1559,7 +1559,6 @@
                 }
             });
 
-            // 方案B：在訊息底部直接加上 LINE Pay 付款連結
             const lineMsg = `📋 【風鳥堂 - 線上點餐單】\n` +
                             `👤 訂購人：${name}\n` +
                             `📞 電話：${phone}\n` +
@@ -1578,10 +1577,12 @@
             const encodedMsg = encodeURIComponent(lineMsg);
             const lineUrl = `https://line.me/R/oaMessage/@${LINE_OFFICIAL_ID}/?${encodedMsg}`;
 
+            // 關鍵修正：加入 keepalive: true 確保跳轉前背景一定能把資料送到 GAS 觸發 LINE 通知
             try {
                 fetch(GAS_WEB_APP_URL, {
                     method: 'POST',
                     mode: 'no-cors',
+                    keepalive: true,
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(orderData)
                 });
@@ -1594,7 +1595,7 @@
             updateCart();
             closeModal('payModal');
 
-            // 跳轉至 LINE 帶入包含付款連結的訊息文字
+            // 轉跳到 LINE
             window.location.href = lineUrl;
         }
 
@@ -1686,6 +1687,7 @@
                 const fetchPromise = fetch(GAS_WEB_APP_URL, {
                     method: 'POST',
                     mode: 'no-cors',
+                    keepalive: true,
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(orderData)
                 });
