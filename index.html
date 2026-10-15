@@ -744,7 +744,7 @@
                 <button class="pay-tab-btn" id="btnTabJko" onclick="switchPayTab('jko')">街口支付</button>
             </div>
 
-            <!-- LINE Pay 付款區塊 (修正版：移除 no-cors，改用純文字送給 GAS 觸發通知) -->
+            <!-- LINE Pay 付款區塊 -->
             <div class="qr-box" id="payBoxLinePay">
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.6rem;">
                     請先點擊複製金額，開啟 LINE Pay 後直接貼上：
@@ -754,14 +754,14 @@
                     📋 點此複製金額 $<span id="copyBtnAmount">0</span>
                 </button>
 
-                <a href="javascript:void(0)" 
-                   onclick="handleAutoPayAndSubmit('https://qrcodepay.line.me/qr/payment/BOjxDmAUQUtFfo9Of0%252Fxg8itSY90KZ6E5Ws%252BRp6EcM5ansUivida28vnpnvM%252FAcR')" 
-                   style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; background-color: #06c755; color: white; padding: 0.85rem 1rem; border-radius: 12px; text-decoration: none; font-weight: bold; font-size: 1.05rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <button id="linePaySubmitBtn"
+                        onclick="handleAutoPayAndSubmit('https://qrcodepay.line.me/qr/payment/BOjxDmAUQUtFfo9Of0%252Fxg8itSY90KZ6E5Ws%252BRp6EcM5ansUivida28vnpnvM%252FAcR')" 
+                        style="width: 100%; border: none; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background-color: #06c755; color: white; padding: 0.85rem 1rem; border-radius: 12px; font-weight: bold; font-size: 1.05rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer;">
                     <i class="fa-brands fa-line" style="font-size: 1.5rem;"></i> 點擊付款並發送訂單 ➔
-                </a>
+                </button>
             </div>
 
-            <!-- 街口支付區塊 (保留 QR Code 與手動送單按鈕) -->
+            <!-- 街口支付區塊 -->
             <div class="qr-box" id="payBoxJko" style="display: none;">
                 <p style="font-size: 0.85rem; font-weight: bold; color: var(--text-dark);">請長按圖片儲存，或截圖下方 QR Code</p>
                 <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">開啟街口支付 App ➔ 點擊「掃描」選擇相冊圖片進行付款</p>
@@ -785,7 +785,6 @@
         const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxpuB_w20nq4ZtldzABmuVqu-iUUgDFW1nBQpuFP2j_8Yj2cv7qla-atfDfCWDFxxb5RA/exec';
         const LINE_OFFICIAL_ID = '694hwlae';
 
-        // 雲端硬碟圖片 ID 對應表
         const imageMap = {
             '爆珠四季冰尼茶': '1dRWG9gKxgDJPzQq6bghZAh6vx5g22ZIu'
         };
@@ -1497,11 +1496,17 @@
             }
         }
 
-        // LINE Pay 專用：修正 fetch 傳送方式，確保 GAS 能夠正常接收並推播通知
+        // LINE Pay 專用：確保先非同步送達 GAS 觸發【風鳥堂 - 新進網頁訂單】通知到您的私人 LINE，完成後才跳轉 LINE
         async function handleAutoPayAndSubmit(payUrl) {
             if (!isStoreOpen) {
                 alert('目前為非營業時間，無法送出訂單！');
                 return;
+            }
+
+            const btn = document.getElementById('linePaySubmitBtn');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 正在送出訂單通知...`;
             }
 
             const pickupTime = document.getElementById('custPickupTime').value;
@@ -1577,16 +1582,17 @@
             const encodedMsg = encodeURIComponent(lineMsg);
             const lineUrl = `https://line.me/R/oaMessage/@${LINE_OFFICIAL_ID}/?${encodedMsg}`;
 
-            // 改用標準的文字傳送格式並保留 keepalive，讓 GAS 能確實接收到資料並發送通知
+            // 關鍵修改：先非同步請求 GAS，等待 1 秒鐘確保通知發出給您的私人 LINE，之後才執行跳轉
             try {
-                fetch(GAS_WEB_APP_URL, {
+                const fetchPromise = fetch(GAS_WEB_APP_URL, {
                     method: 'POST',
-                    keepalive: true,
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify(orderData)
                 });
+                const timeoutPromise = new Promise(resolve => setTimeout(resolve, 1000));
+                await Promise.race([fetchPromise, timeoutPromise]);
             } catch (e) {
-                console.warn('背景寫入異常', e);
+                console.warn('背景寫入 GAS 異常:', e);
             }
 
             cart = [];
@@ -1594,6 +1600,12 @@
             updateCart();
             closeModal('payModal');
 
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-brands fa-line" style="font-size: 1.5rem;"></i> 點擊付款並發送訂單 ➔`;
+            }
+
+            // 轉跳至 LINE
             window.location.href = lineUrl;
         }
 
@@ -1684,12 +1696,11 @@
             try {
                 const fetchPromise = fetch(GAS_WEB_APP_URL, {
                     method: 'POST',
-                    keepalive: true,
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify(orderData)
                 });
 
-                const timeoutPromise = new Promise(resolve => setTimeout(resolve, 2500));
+                const timeoutPromise = new Promise(resolve => setTimeout(resolve, 1000));
                 await Promise.race([fetchPromise, timeoutPromise]);
             } catch (e) {
                 console.warn('GAS 寫入背景異常，仍繼續開啟 LINE:', e);
