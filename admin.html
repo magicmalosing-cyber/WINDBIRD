@@ -550,7 +550,16 @@
                 const topJsonStr = ordersText.substring(47, ordersText.length - 2);
                 const ordersJson = JSON.parse(topJsonStr);
                 
-                const todayStr = '2026-10-11';
+                // ⚡ 動態取得今天的日期（2026-10-15 與 10/15）
+                const now = new Date();
+                const yyyy = now.getFullYear();
+                const mm = String(now.getMonth() + 1).padStart(2, '0');
+                const dd = String(now.getDate()).padStart(2, '0');
+                
+                const todayIsoStr = `${yyyy}-${mm}-${dd}`;
+                const todaySlashStr = `${Number(mm)}/${Number(dd)}`;
+                const todayZeroSlashStr = `${mm}/${dd}`;
+
                 let count = 0;
                 let revenue = 0;
 
@@ -559,7 +568,8 @@
                     if (!c || !c[0] || !c[0].v) return;
                     
                     const timeVal = String(c[0].v);
-                    if (timeVal.includes(todayStr) || timeVal.includes('10/11')) {
+                    // 比對是否為今天（支援 2026-10-15、10/15 等格式）
+                    if (timeVal.includes(todayIsoStr) || timeVal.includes(todaySlashStr) || timeVal.includes(todayZeroSlashStr)) {
                         count++;
                         const totalCol = c[6] ? Number(c[6].v || 0) : 0;
                         revenue += totalCol;
