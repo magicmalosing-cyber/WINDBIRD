@@ -550,15 +550,16 @@
                 const topJsonStr = ordersText.substring(47, ordersText.length - 2);
                 const ordersJson = JSON.parse(topJsonStr);
                 
-                // ⚡ 動態取得今天的日期（2026-10-15 與 10/15）
                 const now = new Date();
-                const yyyy = now.getFullYear();
-                const mm = String(now.getMonth() + 1).padStart(2, '0');
-                const dd = String(now.getDate()).padStart(2, '0');
+                const mm = String(now.getMonth() + 1);
+                const dd = String(now.getDate());
                 
-                const todayIsoStr = `${yyyy}-${mm}-${dd}`;
-                const todaySlashStr = `${Number(mm)}/${Number(dd)}`;
-                const todayZeroSlashStr = `${mm}/${dd}`;
+                // 產生各種可能的今日日期字串格式 (例如: 2026-10-15, 10/15, 10-15)
+                const targetPatterns = [
+                    `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`,
+                    `${mm}/${dd}`,
+                    `${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`
+                ];
 
                 let count = 0;
                 let revenue = 0;
@@ -568,9 +569,13 @@
                     if (!c || !c[0] || !c[0].v) return;
                     
                     const timeVal = String(c[0].v);
-                    // 比對是否為今天（支援 2026-10-15、10/15 等格式）
-                    if (timeVal.includes(todayIsoStr) || timeVal.includes(todaySlashStr) || timeVal.includes(todayZeroSlashStr)) {
+                    
+                    // 只要時間字串裡面包含今天任何一種日期格式，就算今天的單
+                    const isToday = targetPatterns.some(pattern => timeVal.includes(pattern));
+                    
+                    if (isToday) {
                         count++;
+                        // 確保抓取第 7 欄（index 6）的總金額
                         const totalCol = c[6] ? Number(c[6].v || 0) : 0;
                         revenue += totalCol;
                     }
