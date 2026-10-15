@@ -546,32 +546,49 @@
         }
 
         function parseTodayStats(ordersText) {
-    try {
-        const topJsonStr = ordersText.substring(47, ordersText.length - 2);
-        const ordersJson = JSON.parse(topJsonStr);
-        
-        const todayStr = '2026-10-11';
-        let count = 0;
-        let revenue = 0;
+            try {
+                const topJsonStr = ordersText.substring(47, ordersText.length - 2);
+                const ordersJson = JSON.parse(topJsonStr);
+                
+                // 動態取得今天的年、月、日
+                const now = new Date();
+                const yyyy = now.getFullYear();
+                const mm = String(now.getMonth() + 1); // 不補零 (例如 10)
+                const mmPad = String(now.getMonth() + 1).padStart(2, '0'); // 補零 (例如 10)
+                const dd = String(now.getDate()); // 不補零 (例如 15)
+                const ddPad = String(now.getDate()).padStart(2, '0'); // 補零 (例如 15)
 
-        ordersJson.table.rows.forEach(row => {
-            const c = row.c;
-            if (!c || !c[0] || !c[0].v) return;
-            
-            const timeVal = String(c[0].v);
-            if (timeVal.includes(todayStr) || timeVal.includes('10/11')) {
-                count++;
-                const totalCol = c[6] ? Number(c[6].v || 0) : 0;
-                revenue += totalCol;
-            }
-        });
+                let count = 0;
+                let revenue = 0;
 
-                console.log(`🎯 [排查結果] 統計完成 -> 筆數: ${count}, 總額: ${revenue}`);
+                ordersJson.table.rows.forEach(row => {
+                    const c = row.c;
+                    if (!c || !c[0] || !c[0].v) return;
+                    
+                    const timeVal = String(c[0].v).trim();
+                    
+                    // 兼容各種可能的日期寫法 (例如 2026-10-15, 2026/10/15, 10/15 等)
+                    const isToday = 
+                        timeVal.includes(`${yyyy}-${mmPad}-${ddPad}`) || 
+                        timeVal.includes(`${yyyy}/${mmPad}/${ddPad}`) ||
+                        timeVal.includes(`${yyyy}-${mm}-${dd}`) ||
+                        timeVal.includes(`${mmPad}/${ddPad}`) ||
+                        timeVal.includes(`${mm}/${dd}`) ||
+                        timeVal.startsWith(`${yyyy}-${mmPad}-${ddPad}`) ||
+                        timeVal.startsWith(`${yyyy}/${mmPad}/${dd}`);
+
+                    if (isToday) {
+                        count++;
+                        // 總金額在 G 欄 (索引 6)
+                        const totalCol = c[6] ? Number(c[6].v || 0) : 0;
+                        revenue += totalCol;
+                    }
+                });
 
                 document.getElementById('todayOrdersCount').innerText = `${count} 筆`;
                 document.getElementById('todayRevenue').innerText = `$${revenue.toLocaleString()}`;
             } catch (e) {
-                console.error("❌ [排查] 解析過程發生例外錯誤:", e);
+                console.warn("計算今日營運數據失敗", e);
             }
         }
 
