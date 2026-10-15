@@ -1496,7 +1496,7 @@
             }
         }
 
-        // LINE Pay 專用：改用 100% 成功送出的隱藏表單法
+        // LINE Pay 專用：欄位與 GAS 完美對應 (C欄姓名、D欄電話、B欄取餐時間、E欄付款、H欄備註)
         function handleAutoPayAndSubmit(payUrl) {
             if (!isStoreOpen) {
                 alert('目前為非營業時間，無法送出訂單！');
@@ -1535,14 +1535,15 @@
                 });
             }
 
+            // 精準對應 GAS 的欄位結構
             const orderData = {
-                pickupTime: pickupTime,
-                payMethod: selectedPayMethod,
-                name: name,
-                phone: phone,
-                note: note,
-                total: total,
-                cart: finalCartForSubmit
+                name: name,                  // 對應 C 欄 (訂購人姓名)
+                phone: phone,                // 對應 D 欄 (聯絡電話)
+                pickupTime: pickupTime,      // 對應 B 欄 (取餐時間)
+                payMethod: selectedPayMethod,// 對應 E 欄 (付款方式)
+                note: note,                  // 對應 H 欄 (備註)
+                total: total,                // 對應 G 欄 (總金額)
+                cart: finalCartForSubmit     // 組合進 F 欄 (訂購明細)
             };
 
             saveLastOrderToStorage(cart);
@@ -1575,7 +1576,7 @@
             const encodedMsg = encodeURIComponent(lineMsg);
             const lineUrl = `https://line.me/R/oaMessage/@${LINE_OFFICIAL_ID}/?${encodedMsg}`;
 
-            // 使用隱藏表單送出給 GAS，保證 100% 傳達
+            // 使用隱藏表單送出給 GAS
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = GAS_WEB_APP_URL;
@@ -1601,7 +1602,7 @@
             }, 400);
         }
 
-        // 街口支付專用：使用 100% 成功送出的隱藏表單法
+        // 街口支付專用：欄位與 GAS 完美對應
         function submitOrder() {
             if (!isStoreOpen) {
                 alert('目前為非營業時間，無法送出訂單！');
@@ -1640,14 +1641,15 @@
                 });
             }
 
+            // 精準對應 GAS 的欄位結構
             const orderData = {
-                pickupTime: pickupTime,
-                payMethod: selectedPayMethod,
-                name: name,
-                phone: phone,
-                note: note,
-                total: total,
-                cart: finalCartForSubmit
+                name: name,                  // 對應 C 欄 (訂購人姓名)
+                phone: phone,                // 對應 D 欄 (聯絡電話)
+                pickupTime: pickupTime,      // 對應 B 欄 (取餐時間)
+                payMethod: selectedPayMethod,// 對應 E 欄 (付款方式)
+                note: note,                  // 對應 H 欄 (備註)
+                total: total,                // 對應 G 欄 (總金額)
+                cart: finalCartForSubmit     // 組合進 F 欄 (訂購明細)
             };
 
             saveLastOrderToStorage(cart);
