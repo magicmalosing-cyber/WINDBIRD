@@ -550,36 +550,36 @@
                 const topJsonStr = ordersText.substring(47, ordersText.length - 2);
                 const ordersJson = JSON.parse(topJsonStr);
                 
+                // 動態取得今天的日期字串 (例如: 2026-10-15)
                 const now = new Date();
-                const mm = String(now.getMonth() + 1);
-                const dd = String(now.getDate());
+                const yyyy = now.getFullYear();
+                const mm = String(now.getMonth() + 1).padStart(2, '0');
+                const dd = String(now.getDate()).padStart(2, '0');
                 
-                // 產生各種可能的今日日期字串格式 (例如: 2026-10-15, 10/15, 10-15)
-                const targetPatterns = [
-                    `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`,
-                    `${mm}/${dd}`,
-                    `${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`
-                ];
+                const todayStr1 = `${yyyy}-${mm}-${dd}`; // 2026-10-15
+                const todayStr2 = `${yyyy}/${mm}/${dd}`; // 2026/10/15
+                const todayStr3 = `${mm}/${dd}`;         // 10/15
 
                 let count = 0;
                 let revenue = 0;
 
-                ordersJson.table.rows.forEach(row => {
-                    const c = row.c;
-                    if (!c || !c[0] || !c[0].v) return;
-                    
-                    const timeVal = String(c[0].v);
-                    
-                    // 只要時間字串裡面包含今天任何一種日期格式，就算今天的單
-                    const isToday = targetPatterns.some(pattern => timeVal.includes(pattern));
-                    
-                    if (isToday) {
-                        count++;
-                        // 確保抓取第 7 欄（index 6）的總金額
-                        const totalCol = c[6] ? Number(c[6].v || 0) : 0;
-                        revenue += totalCol;
-                    }
-                });
+                if (ordersJson.table && ordersJson.table.rows) {
+                    ordersJson.table.rows.forEach(row => {
+                        const c = row.c;
+                        if (!c || !c[0] || c[0].v === null || c[0].v === undefined) return;
+                        
+                        const timeVal = String(c[0].v);
+                        
+                        // 只要時間欄位裡面包含今天的日期，就抓出來！
+                        if (timeVal.includes(todayStr1) || timeVal.includes(todayStr2) || timeVal.includes(todayStr3)) {
+                            count++;
+                            
+                            // 抓取 G 欄 (c[6]) 的總金額
+                            const amount = c[6] && c[6].v !== null ? Number(c[6].v) : 0;
+                            revenue += isNaN(amount) ? 0 : amount;
+                        }
+                    });
+                }
 
                 document.getElementById('todayOrdersCount').innerText = `${count} 筆`;
                 document.getElementById('todayRevenue').innerText = `$${revenue.toLocaleString()}`;
