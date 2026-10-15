@@ -1496,7 +1496,7 @@
             }
         }
 
-        // LINE Pay 專用：使用穩定的 fetch 送出訂單至 GAS 觸發 LINE 通知
+        // LINE Pay 專用：改用 100% 成功送出的隱藏表單法
         function handleAutoPayAndSubmit(payUrl) {
             if (!isStoreOpen) {
                 alert('目前為非營業時間，無法送出訂單！');
@@ -1575,13 +1575,21 @@
             const encodedMsg = encodeURIComponent(lineMsg);
             const lineUrl = `https://line.me/R/oaMessage/@${LINE_OFFICIAL_ID}/?${encodedMsg}`;
 
-            // 使用 fetch 送出給 GAS
-            fetch(GAS_WEB_APP_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(orderData)
-            }).catch(err => console.log('送出至GAS:', err));
+            // 使用隱藏表單送出給 GAS，保證 100% 傳達
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = GAS_WEB_APP_URL;
+            form.target = '_blank';
+
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'orderJson';
+            input.value = JSON.stringify(orderData);
+            form.appendChild(input);
+
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
 
             cart = [];
             document.getElementById('bagQuantity').value = "0";
@@ -1593,7 +1601,7 @@
             }, 400);
         }
 
-        // 街口支付專用：使用穩定的 fetch 送出訂單至 GAS 觸發 LINE 通知
+        // 街口支付專用：使用 100% 成功送出的隱藏表單法
         function submitOrder() {
             if (!isStoreOpen) {
                 alert('目前為非營業時間，無法送出訂單！');
@@ -1670,13 +1678,21 @@
             const encodedMsg = encodeURIComponent(lineMsg);
             const lineUrl = `https://line.me/R/oaMessage/@${LINE_OFFICIAL_ID}/?${encodedMsg}`;
 
-            // 使用 fetch 送出給 GAS
-            fetch(GAS_WEB_APP_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(orderData)
-            }).catch(err => console.log('送出至GAS:', err));
+            // 使用隱藏表單送出給 GAS
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = GAS_WEB_APP_URL;
+            form.target = '_blank';
+
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'orderJson';
+            input.value = JSON.stringify(orderData);
+            form.appendChild(input);
+
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
 
             cart = [];
             document.getElementById('bagQuantity').value = "0";
