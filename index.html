@@ -744,7 +744,7 @@
                 <button class="pay-tab-btn" id="btnTabJko" onclick="switchPayTab('jko')">街口支付</button>
             </div>
 
-            <!-- LINE Pay 付款區塊 (使用隱藏表單 100% 傳送給 GAS) -->
+            <!-- LINE Pay 付款區塊 -->
             <div class="qr-box" id="payBoxLinePay">
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.6rem;">
                     請先點擊複製金額，開啟 LINE Pay 後直接貼上：
@@ -761,7 +761,7 @@
                 </a>
             </div>
 
-            <!-- 街口支付區塊 (已升級：同樣使用隱藏表單 100% 傳送通知至私人 LINE) -->
+            <!-- 街口支付區塊 -->
             <div class="qr-box" id="payBoxJko" style="display: none;">
                 <p style="font-size: 0.85rem; font-weight: bold; color: var(--text-dark);">請長按圖片儲存，或截圖下方 QR Code</p>
                 <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">開啟街口支付 App ➔ 點擊「掃描」選擇相冊圖片進行付款</p>
@@ -1496,7 +1496,7 @@
             }
         }
 
-        // LINE Pay 專用：改用隱藏表單提交給 GAS（100% 絕對送達）
+        // LINE Pay 專用：使用穩定的 fetch 送出訂單至 GAS 觸發 LINE 通知
         function handleAutoPayAndSubmit(payUrl) {
             if (!isStoreOpen) {
                 alert('目前為非營業時間，無法送出訂單！');
@@ -1575,21 +1575,13 @@
             const encodedMsg = encodeURIComponent(lineMsg);
             const lineUrl = `https://line.me/R/oaMessage/@${LINE_OFFICIAL_ID}/?${encodedMsg}`;
 
-            // 動態建立隱藏表單發送資料給 GAS
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = GAS_WEB_APP_URL;
-            form.target = '_blank';
-
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'orderJson';
-            input.value = JSON.stringify(orderData);
-            form.appendChild(input);
-
-            document.body.appendChild(form);
-            form.submit();
-            document.body.removeChild(form);
+            // 使用 fetch 送出給 GAS
+            fetch(GAS_WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(orderData)
+            }).catch(err => console.log('送出至GAS:', err));
 
             cart = [];
             document.getElementById('bagQuantity').value = "0";
@@ -1601,7 +1593,7 @@
             }, 400);
         }
 
-        // 街口支付專用：手動點擊送出訂單（已升級：同步採用隱藏表單發送訂單至 GAS 觸發私人 LINE 通知）
+        // 街口支付專用：使用穩定的 fetch 送出訂單至 GAS 觸發 LINE 通知
         function submitOrder() {
             if (!isStoreOpen) {
                 alert('目前為非營業時間，無法送出訂單！');
@@ -1678,21 +1670,13 @@
             const encodedMsg = encodeURIComponent(lineMsg);
             const lineUrl = `https://line.me/R/oaMessage/@${LINE_OFFICIAL_ID}/?${encodedMsg}`;
 
-            // ⚡ 動態建立隱藏表單，將街口訂單資料 100% 送達 GAS 觸發私人 LINE 推播
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = GAS_WEB_APP_URL;
-            form.target = '_blank';
-
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'orderJson';
-            input.value = JSON.stringify(orderData);
-            form.appendChild(input);
-
-            document.body.appendChild(form);
-            form.submit();
-            document.body.removeChild(form);
+            // 使用 fetch 送出給 GAS
+            fetch(GAS_WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(orderData)
+            }).catch(err => console.log('送出至GAS:', err));
 
             cart = [];
             document.getElementById('bagQuantity').value = "0";
