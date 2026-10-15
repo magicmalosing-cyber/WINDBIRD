@@ -744,7 +744,7 @@
                 <button class="pay-tab-btn" id="btnTabJko" onclick="switchPayTab('jko')">街口支付</button>
             </div>
 
-            <!-- LINE Pay 付款區塊 (修正版：背景傳送通知給您 + 內嵌付款連結跳轉 LINE) -->
+            <!-- LINE Pay 付款區塊 (修正版：移除 no-cors，改用純文字送給 GAS 觸發通知) -->
             <div class="qr-box" id="payBoxLinePay">
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.6rem;">
                     請先點擊複製金額，開啟 LINE Pay 後直接貼上：
@@ -1497,7 +1497,7 @@
             }
         }
 
-        // LINE Pay 專用：加入 keepalive 確保 GAS 背景通知送達，並帶入付款連結跳轉
+        // LINE Pay 專用：修正 fetch 傳送方式，確保 GAS 能夠正常接收並推播通知
         async function handleAutoPayAndSubmit(payUrl) {
             if (!isStoreOpen) {
                 alert('目前為非營業時間，無法送出訂單！');
@@ -1577,13 +1577,12 @@
             const encodedMsg = encodeURIComponent(lineMsg);
             const lineUrl = `https://line.me/R/oaMessage/@${LINE_OFFICIAL_ID}/?${encodedMsg}`;
 
-            // 關鍵修正：加入 keepalive: true 確保跳轉前背景一定能把資料送到 GAS 觸發 LINE 通知
+            // 改用標準的文字傳送格式並保留 keepalive，讓 GAS 能確實接收到資料並發送通知
             try {
                 fetch(GAS_WEB_APP_URL, {
                     method: 'POST',
-                    mode: 'no-cors',
                     keepalive: true,
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify(orderData)
                 });
             } catch (e) {
@@ -1595,7 +1594,6 @@
             updateCart();
             closeModal('payModal');
 
-            // 轉跳到 LINE
             window.location.href = lineUrl;
         }
 
@@ -1686,9 +1684,8 @@
             try {
                 const fetchPromise = fetch(GAS_WEB_APP_URL, {
                     method: 'POST',
-                    mode: 'no-cors',
                     keepalive: true,
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify(orderData)
                 });
 
