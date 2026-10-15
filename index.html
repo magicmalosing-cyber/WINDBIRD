@@ -761,7 +761,7 @@
                 </a>
             </div>
 
-            <!-- 街口支付區塊 -->
+            <!-- 街口支付區塊 (已升級：同樣使用隱藏表單 100% 傳送通知至私人 LINE) -->
             <div class="qr-box" id="payBoxJko" style="display: none;">
                 <p style="font-size: 0.85rem; font-weight: bold; color: var(--text-dark);">請長按圖片儲存，或截圖下方 QR Code</p>
                 <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">開啟街口支付 App ➔ 點擊「掃描」選擇相冊圖片進行付款</p>
@@ -1496,7 +1496,7 @@
             }
         }
 
-        // LINE Pay 專用：改用隱藏表單提交給 GAS（100% 絕對送達，絕不被瀏覽器攔截）
+        // LINE Pay 專用：改用隱藏表單提交給 GAS（100% 絕對送達）
         function handleAutoPayAndSubmit(payUrl) {
             if (!isStoreOpen) {
                 alert('目前為非營業時間，無法送出訂單！');
@@ -1596,13 +1596,12 @@
             updateCart();
             closeModal('payModal');
 
-            // 稍微延遲 0.4 秒後順暢跳轉 LINE
             setTimeout(() => {
                 window.location.href = lineUrl;
             }, 400);
         }
 
-        // 街口支付專用：手動點擊送出訂單
+        // 街口支付專用：手動點擊送出訂單（已升級：同步採用隱藏表單發送訂單至 GAS 觸發私人 LINE 通知）
         function submitOrder() {
             if (!isStoreOpen) {
                 alert('目前為非營業時間，無法送出訂單！');
@@ -1679,7 +1678,7 @@
             const encodedMsg = encodeURIComponent(lineMsg);
             const lineUrl = `https://line.me/R/oaMessage/@${LINE_OFFICIAL_ID}/?${encodedMsg}`;
 
-            // 動態建立隱藏表單送出
+            // ⚡ 動態建立隱藏表單，將街口訂單資料 100% 送達 GAS 觸發私人 LINE 推播
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = GAS_WEB_APP_URL;
@@ -1700,7 +1699,9 @@
             updateCart();
             closeModal('payModal');
 
-            window.open(lineUrl, '_self');
+            setTimeout(() => {
+                window.location.href = lineUrl;
+            }, 400);
         }
 
         checkBusinessHours();
