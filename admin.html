@@ -547,10 +547,24 @@
 
         function parseTodayStats(ordersText) {
             try {
+                console.log("🔍 [排查] 開始解析訂單資料，原始文字長度:", ordersText ? ordersText.length : 0);
+                
+                // 檢查是否有抓到資料
+                if (!ordersText || !ordersText.includes("table")) {
+                    console.error("❌ [排查] 抓到的訂單資料格式不對或是空的！");
+                    return;
+                }
+
                 const topJsonStr = ordersText.substring(47, ordersText.length - 2);
                 const ordersJson = JSON.parse(topJsonStr);
                 
-                // 動態取得今天的日期字串 (例如: 2026-10-15)
+                console.log("🔍 [排查] 解析後的 JSON 物件:", ordersJson);
+
+                if (!ordersJson.table || !ordersJson.table.rows) {
+                    console.warn("⚠️ [排查] 訂單表格內沒有任何 rows 資料！");
+                    return;
+                }
+
                 const now = new Date();
                 const yyyy = now.getFullYear();
                 const mm = String(now.getMonth() + 1).padStart(2, '0');
@@ -559,32 +573,38 @@
                 const todayStr1 = `${yyyy}-${mm}-${dd}`; // 2026-10-15
                 const todayStr2 = `${yyyy}/${mm}/${dd}`; // 2026/10/15
                 const todayStr3 = `${mm}/${dd}`;         // 10/15
+                console.log("🔍 [排查] 今天比對的日期字串樣板:", todayStr1, todayStr2, todayStr3);
 
                 let count = 0;
                 let revenue = 0;
 
-                if (ordersJson.table && ordersJson.table.rows) {
-                    ordersJson.table.rows.forEach(row => {
-                        const c = row.c;
-                        if (!c || !c[0] || c[0].v === null || c[0].v === undefined) return;
-                        
-                        const timeVal = String(c[0].v);
-                        
-                        // 只要時間欄位裡面包含今天的日期，就抓出來！
-                        if (timeVal.includes(todayStr1) || timeVal.includes(todayStr2) || timeVal.includes(todayStr3)) {
-                            count++;
-                            
-                            // 抓取 G 欄 (c[6]) 的總金額
-                            const amount = c[6] && c[6].v !== null ? Number(c[6].v) : 0;
-                            revenue += isNaN(amount) ? 0 : amount;
-                        }
-                    });
-                }
+                ordersJson.table.rows.forEach((row, index) => {
+                    const c = row.c;
+                    if (!c || !c[0] || c[0].v === null || c[0].v === undefined) {
+                        console.log(`🔍 [排查] 第 ${index} 行：A欄空白，跳過`);
+                        return;
+                    }
+                    
+                    const timeVal = String(c[0].v);
+                    const amount = c[6] && c[6].v !== null ? Number(c[6].v) : 0;
+                    
+                    console.log(`🔍 [排查] 第 ${index} 行：A欄時間 = [${timeVal}], G欄金額 = [${amount}]`);
+
+                    if (timeVal.includes(todayStr1) || timeVal.includes(todayStr2) || timeVal.includes(todayStr3)) {
+                        console.log(`✅ [排查] 第 ${index} 行：成功比對為今天的訂單！`);
+                        count++;
+                        revenue += isNaN(amount) ? 0 : amount;
+                    } else {
+                        console.log(`❌ [排查] 第 ${index} 行：日期不符今天`);
+                    }
+                });
+
+                console.log(`🎯 [排查結果] 統計完成 -> 筆數: ${count}, 總額: ${revenue}`);
 
                 document.getElementById('todayOrdersCount').innerText = `${count} 筆`;
                 document.getElementById('todayRevenue').innerText = `$${revenue.toLocaleString()}`;
             } catch (e) {
-                console.warn("計算今日營運數據失敗", e);
+                console.error("❌ [排查] 解析過程發生例外錯誤:", e);
             }
         }
 
