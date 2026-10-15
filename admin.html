@@ -550,37 +550,33 @@
                 const topJsonStr = ordersText.substring(47, ordersText.length - 2);
                 const ordersJson = JSON.parse(topJsonStr);
                 
-                // 動態取得今天的年、月、日
                 const now = new Date();
                 const yyyy = now.getFullYear();
-                const mm = String(now.getMonth() + 1); // 不補零 (例如 10)
-                const mmPad = String(now.getMonth() + 1).padStart(2, '0'); // 補零 (例如 10)
-                const dd = String(now.getDate()); // 不補零 (例如 15)
-                const ddPad = String(now.getDate()).padStart(2, '0'); // 補零 (例如 15)
+                const mmPad = String(now.getMonth() + 1).padStart(2, '0');
+                const ddPad = String(now.getDate()).padStart(2, '0');
+                const todayStr = `${yyyy}-${mmPad}-${ddPad}`; // 例如 "2026-10-15"
+                const todayStrSlash = `${yyyy}/${mmPad}/${ddPad}`; // 例如 "2026/10/15"
+                const todayStrShort = `${Number(mmPad)}/${Number(ddPad)}`; // 例如 "10/15"
 
                 let count = 0;
                 let revenue = 0;
 
                 ordersJson.table.rows.forEach(row => {
                     const c = row.c;
-                    if (!c || !c[0] || !c[0].v) return;
+                    if (!c || !c[0]) return;
                     
-                    const timeVal = String(c[0].v).trim();
-                    
-                    // 兼容各種可能的日期寫法 (例如 2026-10-15, 2026/10/15, 10/15 等)
-                    const isToday = 
-                        timeVal.includes(`${yyyy}-${mmPad}-${ddPad}`) || 
-                        timeVal.includes(`${yyyy}/${mmPad}/${ddPad}`) ||
-                        timeVal.includes(`${yyyy}-${mm}-${dd}`) ||
-                        timeVal.includes(`${mmPad}/${ddPad}`) ||
-                        timeVal.includes(`${mm}/${dd}`) ||
-                        timeVal.startsWith(`${yyyy}-${mmPad}-${ddPad}`) ||
-                        timeVal.startsWith(`${yyyy}/${mmPad}/${dd}`);
+                    // 同時檢查 gviz 的格式化字串 (f) 與原始值 (v)
+                    const timeVal = String(c[0].f || c[0].v || '').trim();
+                    const totalCol = c[6] ? Number(c[6].v || 0) : 0;
 
-                    if (isToday) {
+                    // 只要符合今天的任何一種日期寫法
+                    if (
+                        timeVal.includes(todayStr) || 
+                        timeVal.includes(todayStrSlash) || 
+                        timeVal.includes(todayStrShort) ||
+                        timeVal.startsWith(todayStr)
+                    ) {
                         count++;
-                        // 總金額在 G 欄 (索引 6)
-                        const totalCol = c[6] ? Number(c[6].v || 0) : 0;
                         revenue += totalCol;
                     }
                 });
