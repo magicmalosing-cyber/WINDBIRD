@@ -905,11 +905,11 @@
             }
 
             const now = new Date();
-            const prepTimeMins = 15;
+            const prepTimeMins = 15; // 第一次取餐時間：當前時間 + 15 分鐘
             const currentMins = now.getHours() * 60 + now.getMinutes();
             const earliestMins = currentMins + prepTimeMins;
             
-            let startMinutes = Math.ceil(earliestMins / 30) * 30;
+            let startMinutes = Math.ceil(earliestMins / 15) * 15; // 對齊 15 分鐘
             
             if (startMinutes < 11 * 60) {
                 startMinutes = 11 * 60;
@@ -940,7 +940,7 @@
                 option.innerText = `${timeStr} 取餐`;
                 select.appendChild(option);
                 
-                startMinutes += 30;
+                startMinutes += 15; // 間隔 15 分鐘
             }
         }
 
