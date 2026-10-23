@@ -108,41 +108,6 @@
             padding: 1rem;
         }
 
-        .reorder-card {
-            background: #eff6ff;
-            border: 1px dashed var(--primary-light);
-            border-radius: var(--radius);
-            padding: 0.85rem 1rem;
-            margin-bottom: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .reorder-title {
-            font-size: 0.9rem;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 0.2rem;
-        }
-
-        .reorder-desc {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-        }
-
-        .reorder-btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 0.4rem 0.8rem;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: bold;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-
         .closed-overlay {
             background: #fee2e2;
             color: #991b1b;
@@ -223,25 +188,15 @@
             gap: 12px;
         }
 
-        .menu-card.sold-out, .menu-card.store-closed {
+        .menu-card.sold-out {
             opacity: 0.5;
             cursor: not-allowed;
             background: #f1f5f9;
         }
 
-        .menu-card:not(.sold-out):not(.store-closed):hover {
+        .menu-card:not(.sold-out):hover {
             transform: translateY(-2px);
             border-color: var(--primary-light);
-        }
-
-        .item-thumb {
-            width: 60px;
-            height: 60px;
-            border-radius: 10px;
-            object-fit: cover;
-            border: 1px solid var(--border-color);
-            flex-shrink: 0;
-            background: #f1f5f9;
         }
 
         .item-info {
@@ -287,7 +242,7 @@
             flex-shrink: 0;
         }
 
-        .menu-card:not(.sold-out):not(.store-closed):hover .add-btn {
+        .menu-card:not(.sold-out):hover .add-btn {
             background-color: var(--primary);
             color: white;
         }
@@ -328,12 +283,6 @@
             overflow-y: auto;
             padding: 1.5rem;
             box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
-            transform: translateY(20px);
-            transition: transform 0.25s ease;
-        }
-
-        .modal-backdrop.active .modal-card {
-            transform: translateY(0);
         }
 
         .modal-header {
@@ -431,11 +380,6 @@
             margin-left: 0.5rem;
         }
 
-        .cart-summary {
-            display: flex;
-            align-items: center;
-        }
-
         .cart-total {
             font-weight: 700;
             font-size: 1.1rem;
@@ -452,23 +396,6 @@
             width: 100%;
             margin-top: 1rem;
             font-size: 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-
-        .btn-primary:hover {
-            background-color: #05b34c;
-        }
-
-        .btn-submit-highlight {
-            background: linear-gradient(135deg, #05b34c 0%, #028a3a 100%);
-            color: white;
-            font-size: 1.1rem;
-            padding: 1rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(6, 199, 85, 0.4);
         }
 
         .cart-item {
@@ -521,7 +448,6 @@
             width: 220px;
             height: auto;
             border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
             margin: 0.5rem 0;
         }
 
@@ -577,30 +503,22 @@
 
     <div class="marquee-container">
         <div class="marquee-content">
-            🎉 全店慶慶祝中！單筆點餐滿 $300 元即免費贈送『招牌風鳥茶』乙杯（可自選甜度冰塊）！   溫馨提醒： 本線上訂餐平台優惠獨立，不適用現場實體門市之行銷活動。
+            🎉 全店慶慶祝中！單筆點餐滿 $300 元即免費贈送『招牌風鳥茶』乙杯（可自選甜度冰塊）！
         </div>
     </div>
 
     <header>
-        <div class="header-title" id="headerTitle" onclick="handleTitleClick()">風鳥堂林口中山店</div>
-        <div class="header-subtitle">官方 LINE ID: @694hwlae ‧ 營業時間 11:00 ~ 22:00  地址：新北市林口區中山路247號 電話：02-26011950</div>
+        <div class="header-title">風鳥堂林口中山店</div>
+        <div class="header-subtitle">官方 LINE ID: @694hwlae ‧ 電話：02-26011950</div>
     </header>
 
     <div class="container">
-        <div class="reorder-card" id="reorderCard" style="display: none;">
-            <div>
-                <div class="reorder-title"><i class="fa-solid fa-rotate-left"></i> 一鍵快速再點</div>
-                <div class="reorder-desc" id="reorderSummary">載入上次點餐明細...</div>
-            </div>
-            <button class="reorder-btn" onclick="applyLastOrder()"><i class="fa-solid fa-cart-plus"></i> 直接套用</button>
-        </div>
-
         <div class="closed-overlay" id="closedOverlay">
-            <i class="fa-solid fa-store-slash"></i> <span id="closedMsg">目前為非營業時間（營業時間為 11:00 ~ 22:00），暫不開放線上點餐！</span>
+            <i class="fa-solid fa-store-slash"></i> <span id="closedMsg">目前為非營業時間，暫不開放線上點餐！</span>
         </div>
 
         <nav class="category-nav" id="categoryNav">
-            <button class="category-btn active" onclick="scrollToCategory('all')">載入中...</button>
+            <button class="category-btn active" onclick="scrollToCategory('all')">全部商品</button>
         </nav>
 
         <div id="menuContainer">
@@ -609,14 +527,8 @@
     </div>
 
     <div class="cart-bar" id="cartBar" onclick="openCartModal()">
-        <div class="cart-summary">
-            <i class="fa-solid fa-shopping-bag"></i>
-            <span class="cart-badge" id="cartCount">0</span>
-        </div>
-        <div>
-            總計: <span class="cart-total" id="cartTotal">$0</span>
-            <span style="font-size: 0.85rem; margin-left: 0.5rem; opacity: 0.8;">前往結帳 ➔</span>
-        </div>
+        <div><i class="fa-solid fa-shopping-bag"></i><span class="cart-badge" id="cartCount">0</span></div>
+        <div>總計: <span class="cart-total" id="cartTotal">$0</span> 前往結帳 ➔</div>
     </div>
 
     <!-- 🔍 追蹤訂單查詢彈窗 Modal -->
@@ -676,46 +588,7 @@
                 </div>
             </div>
 
-            <button class="btn-primary" style="background-color: var(--primary);" onclick="confirmAddToCart()">加入購物車</button>
-        </div>
-    </div>
-
-    <!-- 滿額贈禮 Modal -->
-    <div class="modal-backdrop" id="giftModal">
-        <div class="modal-card">
-            <div class="modal-header">
-                <div>
-                    <div class="modal-title" style="color: #b91c1c;"><i class="fa-solid fa-gift"></i> 滿額贈禮選擇</div>
-                    <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">滿 $300 贈『招牌風鳥茶』乙杯，請選擇喜好的冰甜：</div>
-                </div>
-                <button class="close-btn" onclick="closeModal('giftModal')"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-
-            <div class="option-group">
-                <div class="option-title">贈品甜度</div>
-                <div class="options-flex">
-                    <div class="option-chip" onclick="selectGiftOption(this, 'sweetness', '多糖')">多糖</div>
-                    <div class="option-chip" onclick="selectGiftOption(this, 'sweetness', '正常糖')">正常糖</div>
-                    <div class="option-chip" onclick="selectGiftOption(this, 'sweetness', '少糖(7分)')">少糖(7分)</div>
-                    <div class="option-chip selected" onclick="selectGiftOption(this, 'sweetness', '半糖(5分)')">半糖(5分)</div>
-                    <div class="option-chip" onclick="selectGiftOption(this, 'sweetness', '微糖(3分)')">微糖(3分)</div>
-                    <div class="option-chip" onclick="selectGiftOption(this, 'sweetness', '無糖')">無糖</div>
-                </div>
-            </div>
-
-            <div class="option-group">
-                <div class="option-title">贈品冰塊</div>
-                <div class="options-flex">
-                    <div class="option-chip" onclick="selectGiftOption(this, 'ice', '多冰')">多冰</div>
-                    <div class="option-chip" onclick="selectGiftOption(this, 'ice', '正常冰')">正常冰</div>
-                    <div class="option-chip selected" onclick="selectGiftOption(this, 'ice', '少冰')">少冰</div>
-                    <div class="option-chip" onclick="selectGiftOption(this, 'ice', '微冰')">微冰</div>
-                    <div class="option-chip" onclick="selectGiftOption(this, 'ice', '去冰')">去冰</div>
-                    <div class="option-chip" onclick="selectGiftOption(this, 'ice', '常溫')">常溫</div>
-                </div>
-            </div>
-
-            <button class="btn-primary" style="background-color: #b91c1c;" onclick="confirmGiftSelection()">確認選取贈品，前往結帳 ➔</button>
+            <button class="btn-primary" onclick="confirmAddToCart()">加入購物車</button>
         </div>
     </div>
 
@@ -752,16 +625,14 @@
                 <input type="tel" id="custPhone" class="form-input" placeholder="0912345678">
 
                 <label style="font-size: 0.85rem; font-weight: bold;">備註需求</label>
-                <input type="text" id="custNote" class="form-input" placeholder="例如：發票載具或街口末五碼/付款人姓名">
+                <input type="text" id="custNote" class="form-input" placeholder="例如：發票載具或統編">
 
-                <button class="btn-primary" id="goToPayBtn" onclick="goToPayment()">
-                    前往付款 / 確認訂單 ➔
-                </button>
+                <button class="btn-primary" onclick="goToPayment()">前往付款 / 確認訂單 ➔</button>
             </div>
         </div>
     </div>
 
-    <!-- 付款碼彈窗 Modal -->
+    <!-- 付款彈窗 Modal -->
     <div class="modal-backdrop" id="payModal">
         <div class="modal-card">
             <div class="modal-header">
@@ -770,7 +641,7 @@
             </div>
 
             <div style="text-align: center; margin-bottom: 1rem;">
-                <div style="font-size: 0.9rem; color: var(--text-muted);">訂單應付總金額</div>
+                <div style="font-size: 0.9rem; color: var(--text-muted);">應付總金額</div>
                 <div style="font-size: 2rem; font-weight: 800; color: var(--accent);" id="payModalTotal">$0</div>
             </div>
 
@@ -780,35 +651,27 @@
             </div>
 
             <div class="qr-box" id="payBoxLinePay">
-                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.6rem;">
-                    請先點擊複製金額，開啟 LINE Pay 後直接貼上：
-                </p>
                 <button onclick="copyTotalAmount()" style="background: #e2e8f0; color: #1e293b; border: 1px solid #cbd5e1; padding: 0.5rem 1rem; border-radius: 8px; font-weight: bold; margin-bottom: 0.8rem; cursor: pointer; width: 100%;">
                     📋 點此複製金額 $<span id="copyBtnAmount">0</span>
                 </button>
-                <a href="javascript:void(0)" 
-                   onclick="handleAutoPayAndSubmit('https://qrcodepay.line.me/qr/payment/BOjxDmAUQUtFfo9Of0%252Fxg8itSY90KZ6E5Ws%252BRp6EcM5ansUivida28vnpnvM%252FAcR')" 
-                   style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; background-color: #06c755; color: white; padding: 0.85rem 1rem; border-radius: 12px; text-decoration: none; font-weight: bold; font-size: 1.05rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <a href="javascript:void(0)" onclick="handleAutoPayAndSubmit('https://qrcodepay.line.me/qr/payment/BOjxDmAUQUtFfo9Of0%252Fxg8itSY90KZ6E5Ws%252BRp6EcM5ansUivida28vnpnvM%252FAcR')" 
+                   style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; background-color: #06c755; color: white; padding: 0.85rem 1rem; border-radius: 12px; text-decoration: none; font-weight: bold;">
                     <i class="fa-brands fa-line" style="font-size: 1.5rem;"></i> 點擊付款並發送訂單 ➔
                 </a>
             </div>
 
             <div class="qr-box" id="payBoxJko" style="display: none;">
-                <p style="font-size: 0.85rem; font-weight: bold; color: var(--text-dark);">請長按圖片儲存，或截圖下方 QR Code</p>
-                <a href="jkopay.jpg" target="_blank">
-                    <img src="jkopay.jpg" alt="街口支付 QR Code" class="qr-img">
-                </a>
-                <button class="btn-primary btn-submit-highlight" onclick="submitOrder()" style="margin-top: 1rem; width: 100%;">
-                    <i class="fa-brands fa-line" style="font-size: 1.4rem;"></i> 【必點】我已付款，點此發送訂單至 LINE ➔
-                </button>
+                <p style="font-size: 0.85rem; font-weight: bold; color: var(--text-dark);">請長按圖片儲存 QR Code 掃描付款</p>
+                <a href="jkopay.jpg" target="_blank"><img src="jkopay.jpg" alt="街口" class="qr-img"></a>
+                <button class="btn-primary" onclick="submitOrder()" style="margin-top: 1rem; width: 100%;">我已付款，發送訂單至 LINE ➔</button>
             </div>
         </div>
     </div>
 
     <script>
         const SPREADSHEET_ID = '1_5ynzti6fA6RUq5UUjB28oxw2u2eFMs4RiGRzUmKvQU';
+        // 使用更穩健的 gviz 網址格式
         const MENU_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
-        const TOPPING_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&gid=1381768995`;
         const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxpuB_w20nq4ZtldzABmuVqu-iUUgDFW1nBQpuFP2j_8Yj2cv7qla-atfDfCWDFxxb5RA/exec';
         const LINE_OFFICIAL_ID = '694hwlae';
 
@@ -817,89 +680,14 @@
         let cart = [];
         let currentItem = null;
         let selectedSweetness = '多糖';
-        let sweetnessPrice = 0;
         let selectedIce = '多冰';
         let selectedToppings = [];
         let modalQty = 1;
         let selectedPayMethod = 'LINE Pay';
-        let freeGiftSweetness = '半糖(5分)';
-        let freeGiftIce = '少冰';
         let isStoreOpen = true;
-        let isManualClosed = false;
-        let isTestMode = false;
 
-        let titleClickCount = 0;
-        let titleClickTimer = null;
-
-        function handleTitleClick() {
-            titleClickCount++;
-            clearTimeout(titleClickTimer);
-            if (titleClickCount >= 5) {
-                titleClickCount = 0;
-                toggleTestStoreState();
-            } else {
-                titleClickTimer = setTimeout(() => { titleClickCount = 0; }, 1500);
-            }
-        }
-
-        function toggleTestStoreState() {
-            isTestMode = !isTestMode;
-            if (isTestMode) {
-                isStoreOpen = true;
-                document.getElementById('closedOverlay').style.display = 'none';
-                document.getElementById('cartBar').style.opacity = '1';
-                renderMenu();
-                generatePickupTimeOptions();
-                alert('🧪 已開啟【測試模式】！');
-            } else {
-                checkBusinessHours();
-                renderMenu();
-                alert('🔒 已關閉【測試模式】！');
-            }
-        }
-
-        function checkBusinessHours() {
-            if (isTestMode || isManualClosed) return;
-            const now = new Date();
-            const currentMins = now.getHours() * 60 + now.getMinutes();
-            if (currentMins >= 11 * 60 && currentMins < 22 * 60) {
-                isStoreOpen = true;
-                document.getElementById('closedOverlay').style.display = 'none';
-                document.getElementById('cartBar').style.opacity = '1';
-            } else {
-                isStoreOpen = false;
-                document.getElementById('closedMsg').innerText = '目前為非營業時間（11:00 ~ 22:00），暫不開放線上點餐！';
-                document.getElementById('closedOverlay').style.display = 'block';
-                document.getElementById('cartBar').style.opacity = '0.5';
-            }
-            generatePickupTimeOptions();
-        }
-
-        function generatePickupTimeOptions() {
-            const select = document.getElementById('custPickupTime');
-            if (!select) return;
-            select.innerHTML = '';
-            if (!isStoreOpen) {
-                select.innerHTML = '<option value="非營業時間">⚠️ 目前非營業時間</option>';
-                return;
-            }
-            const now = new Date();
-            let startMinutes = Math.ceil((now.getHours() * 60 + now.getMinutes() + 15) / 15) * 15;
-            if (startMinutes < 11 * 60) startMinutes = 11 * 60;
-            
-            while (startMinutes <= 22 * 60) {
-                const h = Math.floor(startMinutes / 60);
-                const m = startMinutes % 60;
-                const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-                const option = document.createElement('option');
-                option.value = `${timeStr} 取餐`;
-                option.innerText = `${timeStr} 取餐`;
-                select.appendChild(option);
-                startMinutes += 15;
-            }
-        }
-
-        // 🔍 開啟追蹤訂單彈窗並自動帶入記憶的電話
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        function openCartModal() { if (cart.length === 0) { alert('購物車是空的！'); return; } document.getElementById('cartModal').classList.add('active'); }
         function openTrackModal() {
             document.getElementById('trackModal').classList.add('active');
             const savedPhone = localStorage.getItem('feng_last_phone');
@@ -909,78 +697,63 @@
             }
         }
 
-        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        // 🔍 安全查詢訂單
+        async function queryOrdersByPhone() {
+            const phone = document.getElementById('trackPhoneInput').value.trim();
+            const resultBox = document.getElementById('trackResultList');
+            if (!phone) { alert('請輸入電話！'); return; }
 
-        // 🔍 安全防護版：帶入 phone 參數向後端發起查詢，後端只回傳該電話的訂單
-async function queryOrdersByPhone() {
-    const phoneInput = document.getElementById('trackPhoneInput').value.trim();
-    const resultBox = document.getElementById('trackResultList');
+            resultBox.innerHTML = '<div style="text-align:center; padding:1.5rem;"><i class="fa-solid fa-spinner fa-spin"></i> 查詢中...</div>';
 
-    if (!phoneInput) {
-        alert('請先輸入聯絡電話！');
-        return;
-    }
+            try {
+                const res = await fetch(`${GAS_WEB_APP_URL}?action=getOrders&phone=${encodeURIComponent(phone)}&t=${Date.now()}`);
+                const userOrders = await res.json();
 
-    resultBox.innerHTML = '<div style="text-align:center; padding:1.5rem;"><i class="fa-solid fa-spinner fa-spin"></i> 正在安全查詢您的訂單...</div>';
+                if (!userOrders || userOrders.length === 0) {
+                    resultBox.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:1.5rem;">查無今日訂單紀錄！</div>';
+                    return;
+                }
 
-    try {
-        // 向 GAS 請求時精準帶入 &phone=號碼，由後端直接進行資安過濾
-        const res = await fetch(`${GAS_WEB_APP_URL}?action=getOrders&phone=${encodeURIComponent(phoneInput)}&t=${Date.now()}`);
-        const userOrders = await res.json();
+                userOrders.reverse();
+                let html = '';
+                userOrders.forEach(o => {
+                    let badge = '<span class="status-badge-prep">⏳ 備餐製作中</span>';
+                    if (o.status === '已完成') badge = '<span class="status-badge-done">✅ 製作完成，請至櫃檯取餐！</span>';
+                    else if (o.status === '已取餐') badge = '<span class="status-badge-taken">🎉 已完成取餐</span>';
 
-        if (!userOrders || userOrders.length === 0) {
-            resultBox.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:1.5rem;">查無此電話今日的訂單，請確認輸入號碼是否正確！</div>';
-            return;
-        }
-
-        // 倒序顯示，最新訂單在最上面
-        userOrders.reverse();
-
-        let html = '';
-        userOrders.forEach(o => {
-            let statusBadge = '<span class="status-badge-prep">⏳ 備餐製作中</span>';
-            if (o.status === '已完成') {
-                statusBadge = '<span class="status-badge-done">✅ 製作完成，請至櫃檯取餐！</span>';
-            } else if (o.status === '已取餐') {
-                statusBadge = '<span class="status-badge-taken">🎉 已完成取餐</span>';
-            }
-
-            html += `
-                <div class="order-status-card">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
-                        <span style="font-size:0.8rem; color:var(--text-muted);">${o.time}</span>
-                        ${statusBadge}
-                    </div>
-                    <div style="font-weight:bold; font-size:0.95rem; margin-bottom:0.2rem;">⏰ 預計取餐：${o.pickupTime}</div>
-                    <div style="font-size:0.85rem; color:var(--text-dark); margin-bottom:0.3rem;">📦 明細：${o.items}</div>
-                    <div style="font-weight:800; color:var(--accent); font-size:0.95rem;">總計：$${o.total} 元 (${o.payMethod})</div>
-                </div>
-            `;
-        });
-
-        resultBox.innerHTML = html;
-
-    } catch (err) {
-        resultBox.innerHTML = '<div style="text-align:center; color:#ef4444; padding:1.5rem;">查詢失敗，請稍後再試！</div>';
-    }
-}
-
+                    html += `
+                        <div class="order-status-card">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:0.4rem;">
+                                <span style="font-size:0.8rem; color:var(--text-muted);">${o.time}</span>
+                                ${badge}
+                            </div>
+                            <div style="font-weight:bold; font-size:0.95rem;">⏰ 取餐：${o.pickupTime}</div>
+                            <div style="font-size:0.85rem; margin:0.3rem 0;">📦 明細：${o.items}</div>
+                            <div style="font-weight:800; color:var(--accent);">總計：$${o.total} 元 (${o.payMethod})</div>
+                        </div>
+                    `;
+                });
                 resultBox.innerHTML = html;
-
             } catch (err) {
                 resultBox.innerHTML = '<div style="text-align:center; color:#ef4444; padding:1.5rem;">查詢失敗，請稍後再試！</div>';
             }
         }
 
+        // 💡 萬無一失的正規表達式解析 gviz 資料，防止卡在載入中
         async function fetchMenuFromSheet() {
             try {
-                const res = await fetch(MENU_SHEET_URL).then(r => r.text());
-                const menuJsonStr = res.substring(47, res.length - 2);
-                const menuJson = JSON.parse(menuJsonStr);
+                const res = await fetch(MENU_SHEET_URL);
+                const text = await res.text();
+                
+                // 使用 Regex 提取出合法的 JSON 結構
+                const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);?/);
+                if (!match) throw new Error("無效的資料格式");
+                
+                const json = JSON.parse(match[1]);
                 const categoriesMap = {};
                 toppingData = [];
 
-                menuJson.table.rows.forEach(row => {
+                json.table.rows.forEach(row => {
                     const c = row.c;
                     if (!c) return;
                     const catId = c[0] ? String(c[0].v || '') : '';
@@ -993,7 +766,7 @@ async function queryOrdersByPhone() {
                     if (catId === 'system' || rawName.includes('平台開關')) {
                         if (status === '暫停營業' || status === '關閉') {
                             isStoreOpen = false;
-                            document.getElementById('closedMsg').innerText = desc || '本店目前暫停線上點餐服務';
+                            document.getElementById('closedMsg').innerText = desc || '本店目前暫停營業';
                             document.getElementById('closedOverlay').style.display = 'block';
                         }
                         return;
@@ -1002,7 +775,10 @@ async function queryOrdersByPhone() {
                     if (status === '下架' || !rawName) return;
 
                     if (catId === 'cat-topping' || catTitle.includes('加料')) {
-                        parseAndAddToppings(rawName, price, status);
+                        rawName.split(/[/、,]/).forEach(item => {
+                            const name = item.trim();
+                            if (name && !toppingData.some(t => t.name === name)) toppingData.push({ name, price, status });
+                        });
                         return;
                     }
 
@@ -1015,28 +791,21 @@ async function queryOrdersByPhone() {
                 menuData = Object.values(categoriesMap);
                 renderMenuNav();
                 renderMenu();
+                generatePickupTimeOptions();
             } catch (err) {
                 console.error("載入菜單失敗", err);
+                document.getElementById('menuContainer').innerHTML = '<div style="text-align:center; padding:3rem; color:#ef4444;">❌ 載入菜單失敗，請檢查試算表權限或網路連線。</div>';
             }
-        }
-
-        function parseAndAddToppings(rawName, price, status) {
-            rawName.split(/[/、,]/).forEach(item => {
-                const name = item.trim();
-                if (name && !toppingData.some(t => t.name === name)) {
-                    toppingData.push({ name, price, status });
-                }
-            });
         }
 
         function renderMenuNav() {
             const nav = document.getElementById('categoryNav');
-            let navHtml = `<button class="category-btn active" onclick="scrollToCategory('all')">全部商品</button>`;
+            let html = `<button class="category-btn active" onclick="scrollToCategory('all')">全部商品</button>`;
             menuData.forEach(cat => {
-                let shortTitle = cat.title.split('（')[0].split('(')[0].trim();
-                navHtml += `<button class="category-btn" onclick="scrollToCategory('${cat.id}')">${shortTitle}</button>`;
+                let title = cat.title.split('（')[0].split('(')[0].trim();
+                html += `<button class="category-btn" onclick="scrollToCategory('${cat.id}')">${title}</button>`;
             });
-            nav.innerHTML = navHtml;
+            nav.innerHTML = html;
         }
 
         function renderMenu() {
@@ -1068,6 +837,22 @@ async function queryOrdersByPhone() {
             if (id === 'all') { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
             const el = document.getElementById(id);
             if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - 70, behavior: 'smooth' });
+        }
+
+        function generatePickupTimeOptions() {
+            const select = document.getElementById('custPickupTime');
+            if (!select) return;
+            select.innerHTML = '';
+            const now = new Date();
+            let startMinutes = Math.ceil((now.getHours() * 60 + now.getMinutes() + 15) / 15) * 15;
+            if (startMinutes < 11 * 60) startMinutes = 11 * 60;
+            while (startMinutes <= 22 * 60) {
+                const h = Math.floor(startMinutes / 60);
+                const m = startMinutes % 60;
+                const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                select.innerHTML += `<option value="${timeStr} 取餐">${timeStr} 取餐</option>`;
+                startMinutes += 15;
+            }
         }
 
         function openItemModal(name, price) {
@@ -1157,7 +942,8 @@ async function queryOrdersByPhone() {
             if (cart.length === 0) { alert('購物車是空的！'); return; }
             let html = '';
             cart.forEach(item => {
-                html += `<div class="cart-item"><div><b>${item.name}</b><br><small>${item.sweetness}/${item.ice}</small></div><div>$${item.finalPrice * item.qty}</div></div>`;
+                let topText = item.toppings.length ? ` + ${item.toppings.map(t=>t.name).join(', ')}` : '';
+                html += `<div class="cart-item"><div><b>${item.name}</b><br><small>${item.sweetness}/${item.ice}${topText}</small></div><div>$${item.finalPrice * item.qty}</div></div>`;
             });
             document.getElementById('cartItemsList').innerHTML = html;
             document.getElementById('cartModal').classList.add('active');
@@ -1177,7 +963,7 @@ async function queryOrdersByPhone() {
             document.getElementById('btnTabLinePay').classList.toggle('active', type === 'linepay');
             document.getElementById('btnTabJko').classList.toggle('active', type === 'jko');
             document.getElementById('payBoxLinePay').style.display = type === 'linepay' ? 'block' : 'none';
-            document.getElementById('payBoxJko').style.display = type === 'jko' ? 'block' : 'none';
+            document.getElementById('payBoxJko').style.display = 'type' === 'jko' ? 'block' : 'none'; // 修正
             selectedPayMethod = type === 'linepay' ? 'LINE Pay' : '街口支付';
         }
 
@@ -1186,12 +972,9 @@ async function queryOrdersByPhone() {
             alert('已複製金額！');
         }
 
-        // 下單並自動記錄電話到 localStorage
         function handleAutoPayAndSubmit(payUrl) {
             const name = document.getElementById('custName').value.trim();
             const phone = document.getElementById('custPhone').value.trim();
-            
-            // 💡 關鍵：自動記憶客人的手機號碼，下次按「追蹤訂單」會直接帶入！
             localStorage.setItem('feng_last_phone', phone);
 
             const orderData = {
@@ -1218,7 +1001,6 @@ async function queryOrdersByPhone() {
 
         function submitOrder() { handleAutoPayAndSubmit(''); }
 
-        checkBusinessHours();
         fetchMenuFromSheet();
     </script>
 </body>
