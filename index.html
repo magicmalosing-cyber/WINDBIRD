@@ -57,7 +57,7 @@
         header {
             background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
             color: white;
-            padding: 2.5rem 1rem 1.5rem;
+            padding: 2rem 1rem 1.5rem;
             text-align: center;
             box-shadow: var(--shadow);
             position: relative;
@@ -67,7 +67,7 @@
             font-size: 2.2rem;
             font-weight: 800;
             letter-spacing: 2px;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.3rem;
             cursor: pointer;
             user-select: none;
         }
@@ -76,6 +76,28 @@
             font-size: 0.95rem;
             opacity: 0.85;
             font-weight: 300;
+            margin-bottom: 0.8rem;
+        }
+
+        .track-order-top-btn {
+            background: rgba(255, 255, 255, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            padding: 0.45rem 1.2rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+            backdrop-filter: blur(4px);
+        }
+
+        .track-order-top-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
         }
 
         .container {
@@ -530,6 +552,24 @@
             font-size: 1.1rem;
             color: var(--text-muted);
         }
+
+        /* 🔍 訂單追蹤卡片樣式 */
+        .order-status-card {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 0.8rem;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        .status-prep { background: #fef3c7; color: #92400e; }
+        .status-done { background: #dcfce7; color: #166534; }
     </style>
 </head>
 <body>
@@ -543,6 +583,10 @@
     <header>
         <div class="header-title" id="headerTitle" onclick="handleTitleClick()">風鳥堂林口中山店</div>
         <div class="header-subtitle">官方 LINE ID: @694hwlae ‧ 營業時間 11:00 ~ 22:00  地址：新北市林口區中山路247號 電話：02-26011950</div>
+        <!-- 🔍 頂部追蹤訂單按鈕 -->
+        <button class="track-order-top-btn" onclick="openTrackModal()">
+            <i class="fa-solid fa-magnifying-glass-location"></i> 🔍 查詢我的訂單狀態
+        </button>
     </header>
 
     <div class="container">
@@ -575,6 +619,27 @@
         <div>
             總計: <span class="cart-total" id="cartTotal">$0</span>
             <span style="font-size: 0.85rem; margin-left: 0.5rem; opacity: 0.8;">前往結帳 ➔</span>
+        </div>
+    </div>
+
+    <!-- 🔍 嚴格完全比對電話追蹤訂單 Modal -->
+    <div class="modal-backdrop" id="trackModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fa-solid fa-magnifying-glass"></i> 查詢您的訂單備餐進度</div>
+                <button class="close-btn" onclick="closeModal('trackModal')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.8rem;">
+                請輸入您下單時填寫的**完整聯絡電話**（例如 0912345678）進行精準查詢：
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                <input type="tel" id="trackPhoneInput" class="form-input" style="margin-bottom:0;" placeholder="完整手機號碼 (如 0912345678)">
+                <button class="reorder-btn" style="height: 42px; width: 90px; border-radius: 6px;" onclick="searchMyOrders()">查詢</button>
+            </div>
+
+            <div id="trackResultContainer" style="max-height: 320px; overflow-y: auto;"></div>
         </div>
     </div>
 
@@ -726,7 +791,6 @@
         </div>
     </div>
 
-    <!-- 付款碼彈窗 Modal -->
     <div class="modal-backdrop" id="payModal">
         <div class="modal-card">
             <div class="modal-header">
@@ -744,7 +808,6 @@
                 <button class="pay-tab-btn" id="btnTabJko" onclick="switchPayTab('jko')">街口支付</button>
             </div>
 
-            <!-- LINE Pay 付款區塊 -->
             <div class="qr-box" id="payBoxLinePay">
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.6rem;">
                     請先點擊複製金額，開啟 LINE Pay 後直接貼上：
@@ -761,7 +824,6 @@
                 </a>
             </div>
 
-            <!-- 街口支付區塊 -->
             <div class="qr-box" id="payBoxJko" style="display: none;">
                 <p style="font-size: 0.85rem; font-weight: bold; color: var(--text-dark);">請長按圖片儲存，或截圖下方 QR Code</p>
                 <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">開啟街口支付 App ➔ 點擊「掃描」選擇相冊圖片進行付款</p>
@@ -781,6 +843,7 @@
         const SPREADSHEET_ID = '1_5ynzti6fA6RUq5UUjB28oxw2u2eFMs4RiGRzUmKvQU';
         const MENU_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
         const TOPPING_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&gid=1381768995`;
+        const ORDERS_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=` + encodeURIComponent('訂單紀錄') + `&t=` + new Date().getTime();
 
         const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxpuB_w20nq4ZtldzABmuVqu-iUUgDFW1nBQpuFP2j_8Yj2cv7qla-atfDfCWDFxxb5RA/exec';
         const LINE_OFFICIAL_ID = '694hwlae';
@@ -809,6 +872,68 @@
 
         let titleClickCount = 0;
         let titleClickTimer = null;
+
+        function openTrackModal() {
+            document.getElementById('trackModal').classList.add('active');
+        }
+
+        // 🔍 嚴格完全相等比對邏輯 (防止模糊搜尋洩漏他人隱私)
+        async function searchMyOrders() {
+            const phoneInput = document.getElementById('trackPhoneInput').value.trim();
+            const container = document.getElementById('trackResultContainer');
+            if (!phoneInput) {
+                alert('請輸入您的完整電話號碼！');
+                return;
+            }
+
+            container.innerHTML = `<div style="text-align:center; padding:1.5rem; color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> 查詢中...</div>`;
+
+            try {
+                const res = await fetch(ORDERS_SHEET_URL);
+                const text = await res.text();
+                const json = JSON.parse(text.substring(47, text.length - 2));
+
+                let myOrders = [];
+
+                json.table.rows.forEach(row => {
+                    const c = row.c;
+                    if (!c) return;
+                    
+                    // 去除單引號與空白，精準比對電話
+                    let orderPhone = c[3] ? String(c[3].v || '').replace(/'/g, '').trim() : '';
+
+                    if (orderPhone === phoneInput) {
+                        myOrders.push({
+                            time: c[1] ? (c[1].f || c[1].v || '') : '',
+                            name: c[2] ? String(c[2].v || '') : '',
+                            items: c[5] ? String(c[5].v || '') : '',
+                            total: c[6] ? Number(c[6].v || 0) : 0,
+                            status: c[8] ? String(c[8].v || '備餐中') : '備餐中'
+                        });
+                    }
+                });
+
+                if (myOrders.length === 0) {
+                    container.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:1.5rem;">查無此電話號碼之訂單記錄，請確認輸入是否完整正確。</div>`;
+                    return;
+                }
+
+                container.innerHTML = myOrders.reverse().map(o => `
+                    <div class="order-status-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+                            <strong>${o.name} (${o.time})</strong>
+                            <span class="status-badge ${o.status === '已完成' ? 'status-done' : 'status-prep'}">${o.status}</span>
+                        </div>
+                        <div style="font-size:0.85rem; color:var(--text-muted); white-space:pre-line; margin:0.4rem 0;">${o.items}</div>
+                        <div style="font-weight:bold; color:var(--accent); text-align:right;">總金額: $${o.total} 元</div>
+                    </div>
+                `).join('');
+
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = `<div style="text-align:center; color:#ef4444; padding:1rem;">查詢連線失敗，請稍後再試。</div>`;
+            }
+        }
 
         function handleTitleClick() {
             titleClickCount++;
@@ -905,11 +1030,11 @@
             }
 
             const now = new Date();
-            const prepTimeMins = 15; // 第一次取餐時間：當前時間 + 15 分鐘
+            const prepTimeMins = 15;
             const currentMins = now.getHours() * 60 + now.getMinutes();
             const earliestMins = currentMins + prepTimeMins;
             
-            let startMinutes = Math.ceil(earliestMins / 15) * 15; // 對齊 15 分鐘
+            let startMinutes = Math.ceil(earliestMins / 15) * 15;
             
             if (startMinutes < 11 * 60) {
                 startMinutes = 11 * 60;
@@ -940,7 +1065,7 @@
                 option.innerText = `${timeStr} 取餐`;
                 select.appendChild(option);
                 
-                startMinutes += 15; // 間隔 15 分鐘
+                startMinutes += 15;
             }
         }
 
@@ -1496,7 +1621,6 @@
             }
         }
 
-        // LINE Pay 專用：欄位與 GAS 完美對應 (C欄姓名、D欄電話、B欄取餐時間、E欄付款、H欄備註)
         function handleAutoPayAndSubmit(payUrl) {
             if (!isStoreOpen) {
                 alert('目前為非營業時間，無法送出訂單！');
@@ -1535,15 +1659,14 @@
                 });
             }
 
-            // 精準對應 GAS 的欄位結構
             const orderData = {
-                name: name,                  // 對應 C 欄 (訂購人姓名)
-                phone: phone,                // 對應 D 欄 (聯絡電話)
-                pickupTime: pickupTime,      // 對應 B 欄 (取餐時間)
-                payMethod: selectedPayMethod,// 對應 E 欄 (付款方式)
-                note: note,                  // 對應 H 欄 (備註)
-                total: total,                // 對應 G 欄 (總金額)
-                cart: finalCartForSubmit     // 組合進 F 欄 (訂購明細)
+                name: name,
+                phone: phone,
+                pickupTime: pickupTime,
+                payMethod: selectedPayMethod,
+                note: note,
+                total: total,
+                cart: finalCartForSubmit
             };
 
             saveLastOrderToStorage(cart);
@@ -1576,7 +1699,6 @@
             const encodedMsg = encodeURIComponent(lineMsg);
             const lineUrl = `https://line.me/R/oaMessage/@${LINE_OFFICIAL_ID}/?${encodedMsg}`;
 
-            // 使用隱藏表單送出給 GAS
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = GAS_WEB_APP_URL;
@@ -1602,7 +1724,6 @@
             }, 400);
         }
 
-        // 街口支付專用：欄位與 GAS 完美對應
         function submitOrder() {
             if (!isStoreOpen) {
                 alert('目前為非營業時間，無法送出訂單！');
@@ -1641,15 +1762,14 @@
                 });
             }
 
-            // 精準對應 GAS 的欄位結構
             const orderData = {
-                name: name,                  // 對應 C 欄 (訂購人姓名)
-                phone: phone,                // 對應 D 欄 (聯絡電話)
-                pickupTime: pickupTime,      // 對應 B 欄 (取餐時間)
-                payMethod: selectedPayMethod,// 對應 E 欄 (付款方式)
-                note: note,                  // 對應 H 欄 (備註)
-                total: total,                // 對應 G 欄 (總金額)
-                cart: finalCartForSubmit     // 組合進 F 欄 (訂購明細)
+                name: name,
+                phone: phone,
+                pickupTime: pickupTime,
+                payMethod: selectedPayMethod,
+                note: note,
+                total: total,
+                cart: finalCartForSubmit
             };
 
             saveLastOrderToStorage(cart);
@@ -1680,7 +1800,6 @@
             const encodedMsg = encodeURIComponent(lineMsg);
             const lineUrl = `https://line.me/R/oaMessage/@${LINE_OFFICIAL_ID}/?${encodedMsg}`;
 
-            // 使用隱藏表單送出給 GAS
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = GAS_WEB_APP_URL;
