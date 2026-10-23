@@ -3,139 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>風鳥堂 - 店鋪管理與即時訂單後台</title>
+    <title>風鳥堂 - 後台管理與即時訂單</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root {
-            --primary: #1e3a8a;
-            --primary-light: #3b82f6;
-            --accent: #d97706;
-            --bg-light: #f8fafc;
-            --text-dark: #1e293b;
-            --text-muted: #64748b;
-            --border-color: #e2e8f0;
-            --radius: 12px;
-        }
-
+        :root { --primary: #1e3a8a; --accent: #d97706; --bg-light: #f8fafc; --text-dark: #1e293b; --text-muted: #64748b; --border-color: #e2e8f0; --radius: 12px; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         body { background-color: var(--bg-light); color: var(--text-dark); padding-bottom: 50px; }
-
-        .closed-alert-banner {
-            display: none; background-color: #dc2626; color: white; text-align: center; padding: 0.6rem 1rem; font-weight: 800; font-size: 0.95rem; position: sticky; top: 0; z-index: 40;
-        }
-        body.is-closed-mode .closed-alert-banner { display: block; }
-        body.is-closed-mode { background-color: #fef2f2; }
-
-        header { background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); color: white; padding: 1.2rem 1rem; text-align: center; position: sticky; top: 0; z-index: 30; }
-        body.is-closed-mode header { top: 38px; }
-
+        header { background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); color: white; padding: 1.2rem 1rem; text-align: center; }
         .container { width: 100%; max-width: 900px; margin: 0 auto; padding: 1rem 0.75rem; }
-
         .stats-dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem; }
-        .stat-card { background: white; border-radius: var(--radius); padding: 1rem; box-shadow: 0 2px 6px rgba(0,0,0,0.04); border: 1px solid var(--border-color); text-align: center; }
-        .stat-label { font-size: 0.8rem; color: var(--text-muted); font-weight: 700; }
-        .stat-value { font-size: 1.35rem; font-weight: 800; color: var(--primary); margin-top: 0.2rem; }
-
-        .store-master-card {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: white; border-radius: var(--radius); padding: 1.2rem 1.5rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;
-        }
-        .master-toggle-btn { padding: 0.75rem 1.4rem; border-radius: 12px; font-weight: 800; border: none; cursor: pointer; color: white; }
-        .master-toggle-btn.open { background-color: #22c55e; }
-        .master-toggle-btn.closed { background-color: #ef4444; }
-
-        /* 📋 下方新增的即時訂單管理區塊樣式 */
-        .admin-section-box { background: white; border-radius: var(--radius); padding: 1.2rem; margin-top: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
-        .admin-section-title { font-size: 1.2rem; font-weight: 800; color: var(--primary); margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem; }
+        .stat-card { background: white; border-radius: var(--radius); padding: 1rem; text-align: center; border: 1px solid var(--border-color); }
         
+        .admin-section-box { background: white; border-radius: var(--radius); padding: 1.2rem; margin-top: 1.5rem; border: 1px solid var(--border-color); }
         .order-admin-card { background: #f8fafc; border: 1px solid var(--border-color); border-radius: 10px; padding: 1rem; margin-bottom: 0.8rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
-        .order-admin-card.is-done { background: #f0fdf4; border-color: #bbf7d0; opacity: 0.75; }
+        .order-admin-card.is-done { background: #f0fdf4; border-color: #bbf7d0; }
         
-        .order-action-btn { padding: 0.5rem 1rem; border-radius: 8px; font-weight: bold; border: none; cursor: pointer; font-size: 0.85rem; white-space: nowrap; }
+        .order-action-btn { padding: 0.5rem 0.8rem; border-radius: 8px; font-weight: bold; border: none; cursor: pointer; font-size: 0.8rem; white-space: nowrap; margin-left: 4px; }
         .btn-to-done { background: #22c55e; color: white; }
-        .btn-to-prep { background: #f59e0b; color: white; }
-
-        .search-input { width: 100%; padding: 0.85rem 1rem; font-size: 1rem; border-radius: var(--radius); border: 1px solid var(--border-color); margin-bottom: 1rem; }
-        .category-nav { display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0.75rem; margin-bottom: 1.2rem; background: white; border-radius: var(--radius); }
-        .category-btn { background: #f1f5f9; border: 1px solid var(--border-color); padding: 0.55rem 0.9rem; font-size: 0.9rem; font-weight: 700; color: var(--text-muted); cursor: pointer; border-radius: 10px; }
-        .category-btn.active { color: white; background-color: var(--primary); }
+        .btn-to-taken { background: #64748b; color: white; }
 
         .item-card { background: white; border-radius: var(--radius); padding: 0.85rem 1.2rem; margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-color); }
-        .item-card.is-sold-out { background-color: #fef2f2; border-color: #fecaca; }
-        .price-input { width: 75px; padding: 0.3rem; font-size: 0.95rem; font-weight: 700; color: var(--accent); border: 1px solid var(--border-color); border-radius: 8px; text-align: center; }
-        .toggle-btn { padding: 0.6rem 1.1rem; border-radius: 12px; font-weight: 800; border: none; cursor: pointer; }
+        .price-input { width: 75px; padding: 0.3rem; font-weight: bold; color: var(--accent); border: 1px solid var(--border-color); border-radius: 6px; text-align: center; }
+        .toggle-btn { padding: 0.5rem 1rem; border-radius: 8px; font-weight: bold; border: none; cursor: pointer; }
         .toggle-btn.on { background-color: #dcfce7; color: #15803d; }
         .toggle-btn.off { background-color: #ef4444; color: white; }
     </style>
 </head>
 <body>
-
-    <div class="closed-alert-banner" id="closedAlertBanner">
-        <i class="fa-solid fa-triangle-exclamation"></i> 目前店鋪處於暫停營業狀態！
-    </div>
-
-    <header>
-        <div class="header-title">⚡ 風鳥堂 - 管理後台與即時訂單控制</div>
-    </header>
+    <header><div style="font-size: 1.35rem; font-weight: 800;">⚡ 風鳥堂 - 管理後台與即時訂單控制</div></header>
 
     <div class="container">
         <div class="stats-dashboard">
-            <div class="stat-card">
-                <div class="stat-label">今日已接單數</div>
-                <div class="stat-value" id="todayOrdersCount">0 筆</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">今日營業總額</div>
-                <div class="stat-value" id="todayRevenue">$0</div>
-            </div>
+            <div class="stat-card"><div style="font-size:0.8rem; color:var(--text-muted);">今日已接單數</div><div style="font-size:1.35rem; font-weight:800; color:var(--primary);" id="todayOrdersCount">0 筆</div></div>
+            <div class="stat-card"><div style="font-size:0.8rem; color:var(--text-muted);">今日營業總額</div><div style="font-size:1.35rem; font-weight:800; color:var(--primary);" id="todayRevenue">$0</div></div>
         </div>
 
-        <div class="store-master-card">
-            <div>
-                <h3><i class="fa-solid fa-store"></i> 全店線上點餐狀態</h3>
-                <p id="storeMasterStatusText">讀取中...</p>
-            </div>
-            <button id="masterToggleBtn" class="master-toggle-btn open" onclick="toggleStoreStatus()">載入中</button>
-        </div>
-
-        <!-- 📋 新增的即時訂單狀態管理區塊 -->
+        <!-- 📋 今日即時訂單管理（已取餐會自動隱藏） -->
         <div class="admin-section-box">
-            <div class="admin-section-title">
-                <span><i class="fa-solid fa-clipboard-list"></i> 今日即時訂單管理（點擊按鈕切換狀態）</span>
-                <button onclick="fetchAdminData()" style="background:none; border:none; color:var(--primary); cursor:pointer; font-size:0.9rem;"><i class="fa-solid fa-rotate"></i> 重新整理</button>
+            <div style="font-size: 1.1rem; font-weight: 800; color: var(--primary); margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                <span><i class="fa-solid fa-clipboard-list"></i> 今日即時訂單（尚未取餐）</span>
+                <button onclick="fetchAdminData()" style="background:none; border:none; color:var(--primary); cursor:pointer;"><i class="fa-solid fa-rotate"></i> 重新整理</button>
             </div>
-            <div id="liveOrdersContainer">
-                <div style="text-align:center; color:var(--text-muted); padding:1rem;">載入訂單中...</div>
-            </div>
+            <div id="liveOrdersContainer"><div style="text-align:center; color:var(--text-muted); padding:1rem;">載入中...</div></div>
         </div>
 
-        <div class="section-title" style="margin-top:2rem;">📦 菜單品項與價格/缺貨管理</div>
-        <input type="text" id="searchInput" class="search-input" placeholder="快速搜尋品項..." oninput="filterMenuItems()">
-        
-        <nav class="category-nav" id="categoryNav"></nav>
+        <div style="font-size: 1.1rem; font-weight: 800; color: var(--primary); margin: 2rem 0 0.8rem;">📦 菜單價格與缺貨管理</div>
         <div id="adminMenuContainer"></div>
     </div>
 
     <script>
         const SPREADSHEET_ID = '1_5ynzti6fA6RUq5UUjB28oxw2u2eFMs4RiGRzUmKvQU';
-        const MENU_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
-        const ORDERS_SHEET_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=` + encodeURIComponent('訂單紀錄') + `&t=` + new Date().getTime();
+        const MENU_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json`;
+        const ORDERS_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=` + encodeURIComponent('訂單紀錄') + `&t=` + new Date().getTime();
         const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxpuB_w20nq4ZtldzABmuVqu-iUUgDFW1nBQpuFP2j_8Yj2cv7qla-atfDfCWDFxxb5RA/exec';
-
-        let adminMenuData = [];
-        let storeIsOpen = true;
-        let cachedOrders = [];
 
         async function fetchAdminData() {
             try {
                 const [menuRes, ordersRes] = await Promise.all([
-                    fetch(MENU_SHEET_URL).then(r => r.text()),
-                    fetch(ORDERS_SHEET_URL).then(r => r.text()).catch(() => null)
+                    fetch(MENU_URL).then(r => r.text()),
+                    fetch(ORDERS_URL).then(r => r.text()).catch(() => null)
                 ]);
 
-                const json = JSON.parse(menuRes.substring(47, menuRes.length - 2));
+                // 渲染菜單
+                const menuJson = JSON.parse(menuRes.substring(47, menuRes.length - 2));
                 const categoriesMap = {};
-
-                json.table.rows.forEach(row => {
+                menuJson.table.rows.forEach(row => {
                     const c = row.c;
                     if (!c) return;
                     const catId = c[0] ? String(c[0].v || '') : '';
@@ -143,175 +75,93 @@
                     const rawName = c[2] ? String(c[2].v || '') : '';
                     const price = c[3] ? Number(c[3].v || 0) : 0;
                     const status = c[5] ? String(c[5].v || '上架') : '上架';
-
-                    if (rawName === '平台開關' || catId === 'system') {
-                        storeIsOpen = (status === '營業中' || status === '上架');
-                        updateStoreMasterUI();
-                        return;
-                    }
-                    if (!rawName) return;
-                    if (!categoriesMap[catId]) categoriesMap[catId] = { id: catId, title: catTitle, items: [] };
+                    if (!rawName || rawName === '平台開關') return;
+                    if (!categoriesMap[catId]) categoriesMap[catId] = { title: catTitle, items: [] };
                     categoriesMap[catId].items.push({ name: rawName, price, status });
                 });
 
-                adminMenuData = Object.values(categoriesMap);
-                renderCategoryNav();
-                renderAdminUI();
-
-                if (ordersRes) parseTodayStatsAndOrders(ordersRes);
-
-            } catch (err) {
-                console.error(err);
-            }
-        }
-
-        function parseTodayStatsAndOrders(ordersText) {
-            try {
-                const ordersJson = JSON.parse(ordersText.substring(47, ordersText.length - 2));
-                const now = new Date();
-                const todayStr = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`;
-                
-                let count = 0;
-                let revenue = 0;
-                let liveOrdersHtml = '';
-                cachedOrders = [];
-
-                ordersJson.table.rows.forEach((row, index) => {
-                    const c = row.c;
-                    if (!c || !c[0]) return;
-                    const timeVal = String(c[0].f || c[0].v || '').trim();
-                    const totalCol = c[6] ? Number(c[6].v || 0) : 0;
-
-                    if (timeVal.includes(todayStr) || timeVal.includes(String(now.getDate()))) {
-                        count++;
-                        revenue += totalCol;
-
-                        const orderId = index; // 用試算表列索引當作識別
-                        const name = c[2] ? String(c[2].v || '') : '';
-                        const phone = c[3] ? String(c[3].v || '') : '';
-                        const items = c[5] ? String(c[5].v || '') : '';
-                        const status = c[8] ? String(c[8].v || '備餐中') : '備餐中';
-
-                        cachedOrders.push({ rowId: orderId, name, phone, items, status });
-
-                        const isDone = status === '已完成';
-                        liveOrdersHtml += `
-                            <div class="order-admin-card ${isDone ? 'is-done' : ''}">
-                                <div style="flex:1;">
-                                    <div style="font-weight:bold; font-size:1rem; margin-bottom:0.2rem;">${name} (${phone}) - <span style="color:var(--accent);">${timeVal}</span></div>
-                                    <div style="font-size:0.85rem; color:var(--text-muted); white-space:pre-line; margin-bottom:0.3rem;">${items}</div>
-                                    <div style="font-size:0.8rem; font-weight:bold;">狀態：<span style="color:${isDone ? '#166534' : '#b45309'};">${status}</span></div>
-                                </div>
-                                <div>
-                                    <button class="order-action-btn ${isDone ? 'btn-to-prep' : 'btn-to-done'}" onclick="updateOrderStatus(${orderId}, '${isDone ? '備餐中' : '已完成'}')">
-                                        ${isDone ? '🔄 改為備餐中' : '✅ 設為已完成'}
-                                    </button>
-                                </div>
-                            </div>
-                        `;
-                    }
-                });
-
-                document.getElementById('todayOrdersCount').innerText = `${count} 筆`;
-                document.getElementById('todayRevenue').innerText = `$${revenue.toLocaleString()}`;
-                document.getElementById('liveOrdersContainer').innerHTML = liveOrdersHtml || '<div style="text-align:center; color:var(--text-muted); padding:1rem;">今日尚無訂單</div>';
-
-            } catch (e) {
-                console.warn("解析訂單失敗", e);
-            }
-        }
-
-        async function updateOrderStatus(rowId, newStatus) {
-            try {
-                const url = `${GAS_WEB_APP_URL}?action=updateOrderStatus&rowId=${rowId}&status=${encodeURIComponent(newStatus)}&t=${Date.now()}`;
-                const img = new Image();
-                img.src = url;
-                alert(`已將訂單狀態更新為：${newStatus}`);
-                setTimeout(fetchAdminData, 800); // 重新載入
-            } catch (e) {
-                alert('更新狀態失敗');
-            }
-        }
-
-        function updateStoreMasterUI() {
-            const btn = document.getElementById('masterToggleBtn');
-            const statusText = document.getElementById('storeMasterStatusText');
-            if (storeIsOpen) {
-                document.body.classList.remove('is-closed-mode');
-                btn.className = 'master-toggle-btn open';
-                btn.innerHTML = '營業中';
-                statusText.innerText = '正常營業中';
-            } else {
-                document.body.classList.add('is-closed-mode');
-                btn.className = 'master-toggle-btn closed';
-                btn.innerHTML = '暫停營業';
-                statusText.innerText = '已暫停營業';
-            }
-        }
-
-        async function toggleStoreStatus() {
-            storeIsOpen = !storeIsOpen;
-            updateStoreMasterUI();
-            const newStatus = storeIsOpen ? '營業中' : '暫停營業';
-            new Image().src = `${GAS_WEB_APP_URL}?action=updateStatus&name=${encodeURIComponent('平台開關')}&val=${encodeURIComponent(newStatus)}&t=${Date.now()}`;
-        }
-
-        function renderCategoryNav() {
-            const nav = document.getElementById('categoryNav');
-            nav.innerHTML = `<button class="category-btn active" onclick="scrollToCategory('all')">全部</button>` + 
-                adminMenuData.map(cat => `<button class="category-btn" onclick="scrollToCategory('${cat.id}')">${cat.title.split('（')[0]}</button>`).join('');
-        }
-
-        function renderAdminUI() {
-            const container = document.getElementById('adminMenuContainer');
-            container.innerHTML = adminMenuData.map(cat => `
-                <div id="${cat.id}" class="menu-section">
-                    <div style="font-weight:800; color:var(--primary); margin:1rem 0 0.5rem;">${cat.title}</div>
+                document.getElementById('adminMenuContainer').innerHTML = Object.values(categoriesMap).map(cat => `
+                    <div style="font-weight:bold; margin:1rem 0 0.5rem; color:var(--text-dark);">${cat.title}</div>
                     ${cat.items.map(item => `
                         <div class="item-card ${item.status === '售完' ? 'is-sold-out' : ''}">
                             <div>
                                 <div style="font-weight:bold;">${item.name}</div>
-                                <div style="display:flex; gap:0.3rem; margin-top:0.3rem;">
+                                <div style="display:flex; gap:0.4rem; margin-top:0.3rem;">
                                     <input type="number" class="price-input" value="${item.price}" />
-                                    <button style="padding:0.3rem 0.6rem; border-radius:6px; background:#f1f5f9; border:1px solid var(--border-color); cursor:pointer;" onclick="updateItemPrice(this, '${item.name}')">更改價格</button>
+                                    <button style="padding:0.3rem 0.6rem; border-radius:6px; background:#f1f5f9; border:1px solid var(--border-color); cursor:pointer;" onclick="updatePrice(this, '${item.name}')">改價</button>
                                 </div>
                             </div>
-                            <button class="toggle-btn ${item.status === '售完' ? 'off' : 'on'}" onclick="toggleItemStatus(this, '${item.name}')">
-                                ${item.status === '售完' ? '已售完' : '供應中'}
-                            </button>
-                        </div>
-                    `).join('')}
-                </div>
-            `).join('');
+                            <button class="toggle-btn ${item.status === '售完' ? 'off' : 'on'}" onclick="toggleStatus(this, '${item.name}')">${item.status === '售完' ? '已售完' : '供應中'}</button>
+                        </div>`).join('')}`).join('');
+
+                // 渲染今日訂單
+                if (ordersRes) parseTodayOrders(ordersRes);
+            } catch (e) { console.error(e); }
         }
 
-        function updateItemPrice(btn, itemName) {
+        function parseTodayOrders(ordersText) {
+            const ordersJson = JSON.parse(ordersText.substring(47, ordersText.length - 2));
+            const now = new Date();
+            const todayStr1 = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`;
+            const todayStr2 = `${Number(now.getMonth() + 1)}/${Number(now.getDate())}`;
+
+            let count = 0, revenue = 0, liveOrdersHtml = '';
+
+            ordersJson.table.rows.forEach((row, index) => {
+                const c = row.c;
+                if (!c || !c[0]) return;
+                const timeVal = String(c[0].f || c[0].v || '').trim();
+                const totalCol = c[6] ? Number(c[6].v || 0) : 0;
+
+                // 只篩選今天的訂單
+                if (timeVal.includes(todayStr1) || timeVal.includes(todayStr2)) {
+                    count++;
+                    revenue += totalCol;
+
+                    const status = c[8] ? String(c[8].v || '備餐中') : '備餐中';
+                    
+                    // 💡 如果狀態已經是「已取餐」，就不會再顯示在後台頁面！
+                    if (status === '已取餐') return;
+
+                    const isDone = status === '已完成';
+                    liveOrdersHtml += `
+                        <div class="order-admin-card ${isDone ? 'is-done' : ''}">
+                            <div style="flex:1;">
+                                <div style="font-weight:bold;">${c[2]?.v || ''} (${c[3]?.v || ''}) - <span style="color:var(--accent);">${timeVal}</span></div>
+                                <div style="font-size:0.85rem; color:var(--text-muted); white-space:pre-line; margin:0.3rem 0;">${c[5]?.v || ''}</div>
+                                <div style="font-size:0.8rem;">進度：<b style="color:${isDone?'#166534':'#b45309'}">${status}</b></div>
+                            </div>
+                            <div style="display:flex; flex-direction:column; gap:4px;">
+                                ${!isDone ? `<button class="order-action-btn btn-to-done" onclick="updateStatus(${index}, '已完成')">✅ 設為已完成</button>` : ''}
+                                <button class="order-action-btn btn-to-taken" onclick="updateStatus(${index}, '已取餐')">🛍️ 標記已取餐</button>
+                            </div>
+                        </div>`;
+                }
+            });
+
+            document.getElementById('todayOrdersCount').innerText = `${count} 筆`;
+            document.getElementById('todayRevenue').innerText = `$${revenue.toLocaleString()}`;
+            document.getElementById('liveOrdersContainer').innerHTML = liveOrdersHtml || '<div style="text-align:center; color:var(--text-muted); padding:1rem;">今日尚無未取餐訂單</div>';
+        }
+
+        async function updateStatus(rowId, newStatus) {
+            new Image().src = `${GAS_WEB_APP_URL}?action=updateOrderStatus&rowId=${rowId}&status=${encodeURIComponent(newStatus)}&t=${Date.now()}`;
+            alert(`已更新狀態為：${newStatus}`);
+            setTimeout(fetchAdminData, 800);
+        }
+
+        function updatePrice(btn, name) {
             const price = btn.previousElementSibling.value;
-            new Image().src = `${GAS_WEB_APP_URL}?action=updatePrice&name=${encodeURIComponent(itemName)}&val=${price}&t=${Date.now()}`;
-            alert(`「${itemName}」價格已更新為 $${price}`);
+            new Image().src = `${GAS_WEB_APP_URL}?action=updatePrice&name=${encodeURIComponent(name)}&val=${price}&t=${Date.now()}`;
+            alert(`「${name}」價格已更新為 $${price}`);
         }
 
-        function toggleItemStatus(btn, itemName) {
+        function toggleStatus(btn, name) {
             const isSoldOut = btn.classList.contains('off');
             const newStatus = isSoldOut ? '上架' : '售完';
             btn.className = `toggle-btn ${isSoldOut ? 'on' : 'off'}`;
             btn.innerText = isSoldOut ? '供應中' : '已售完';
-            btn.closest('.item-card').classList.toggle('is-sold-out', !isSoldOut);
-            new Image().src = `${GAS_WEB_APP_URL}?action=updateStatus&name=${encodeURIComponent(itemName)}&val=${encodeURIComponent(newStatus)}&t=${Date.now()}`;
-        }
-
-        function scrollToCategory(id) {
-            if (id === 'all') { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
-            const el = document.getElementById(id);
-            if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - 120, behavior: 'smooth' });
-        }
-
-        function filterMenuItems() {
-            const kw = document.getElementById('searchInput').value.toLowerCase();
-            document.querySelectorAll('.item-card').forEach(card => {
-                const name = card.querySelector('div > div').innerText.toLowerCase();
-                card.style.display = name.includes(kw) ? 'flex' : 'none';
-            });
+            new Image().src = `${GAS_WEB_APP_URL}?action=updateStatus&name=${encodeURIComponent(name)}&val=${encodeURIComponent(newStatus)}&t=${Date.now()}`;
         }
 
         fetchAdminData();
