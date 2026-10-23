@@ -13,15 +13,12 @@
         .container { width: 100%; max-width: 900px; margin: 0 auto; padding: 1rem 0.75rem; }
         .stats-dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem; }
         .stat-card { background: white; border-radius: var(--radius); padding: 1rem; text-align: center; border: 1px solid var(--border-color); }
-        
-        .admin-section-box { background: white; border-radius: var(--radius); padding: 1.2rem; margin-top: 1.5rem; border: 1px solid var(--border-color); }
+        .admin-section-box { background: white; border-radius: var(--radius); padding: 1.2rem; margin-top: 1.5rem; border: 1px solid var(--border-color); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
         .order-admin-card { background: #f8fafc; border: 1px solid var(--border-color); border-radius: 10px; padding: 1rem; margin-bottom: 0.8rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
         .order-admin-card.is-done { background: #f0fdf4; border-color: #bbf7d0; }
-        
         .order-action-btn { padding: 0.5rem 0.8rem; border-radius: 8px; font-weight: bold; border: none; cursor: pointer; font-size: 0.8rem; white-space: nowrap; margin-left: 4px; }
         .btn-to-done { background: #22c55e; color: white; }
         .btn-to-taken { background: #64748b; color: white; }
-
         .item-card { background: white; border-radius: var(--radius); padding: 0.85rem 1.2rem; margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-color); }
         .price-input { width: 75px; padding: 0.3rem; font-weight: bold; color: var(--accent); border: 1px solid var(--border-color); border-radius: 6px; text-align: center; }
         .toggle-btn { padding: 0.5rem 1rem; border-radius: 8px; font-weight: bold; border: none; cursor: pointer; }
@@ -38,7 +35,6 @@
             <div class="stat-card"><div style="font-size:0.8rem; color:var(--text-muted);">今日營業總額</div><div style="font-size:1.35rem; font-weight:800; color:var(--primary);" id="todayRevenue">$0</div></div>
         </div>
 
-        <!-- 📋 今日即時訂單管理（已取餐會自動隱藏） -->
         <div class="admin-section-box">
             <div style="font-size: 1.1rem; font-weight: 800; color: var(--primary); margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
                 <span><i class="fa-solid fa-clipboard-list"></i> 今日即時訂單（尚未取餐）</span>
@@ -64,7 +60,6 @@
                     fetch(ORDERS_URL).then(r => r.text()).catch(() => null)
                 ]);
 
-                // 渲染菜單
                 const menuJson = JSON.parse(menuRes.substring(47, menuRes.length - 2));
                 const categoriesMap = {};
                 menuJson.table.rows.forEach(row => {
@@ -94,7 +89,6 @@
                             <button class="toggle-btn ${item.status === '售完' ? 'off' : 'on'}" onclick="toggleStatus(this, '${item.name}')">${item.status === '售完' ? '已售完' : '供應中'}</button>
                         </div>`).join('')}`).join('');
 
-                // 渲染今日訂單
                 if (ordersRes) parseTodayOrders(ordersRes);
             } catch (e) { console.error(e); }
         }
@@ -113,14 +107,13 @@
                 const timeVal = String(c[0].f || c[0].v || '').trim();
                 const totalCol = c[6] ? Number(c[6].v || 0) : 0;
 
-                // 只篩選今天的訂單
                 if (timeVal.includes(todayStr1) || timeVal.includes(todayStr2)) {
                     count++;
                     revenue += totalCol;
 
                     const status = c[8] ? String(c[8].v || '備餐中') : '備餐中';
                     
-                    // 💡 如果狀態已經是「已取餐」，就不會再顯示在後台頁面！
+                    // 💡 如果狀態已經是「已取餐」，自動從後台畫面隱藏！
                     if (status === '已取餐') return;
 
                     const isDone = status === '已完成';
