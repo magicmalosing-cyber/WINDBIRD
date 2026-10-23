@@ -911,51 +911,59 @@
 
         function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-        // 🔍 依電話號碼查詢今日訂單進度
-        async function queryOrdersByPhone() {
-            const phone = document.getElementById('trackPhoneInput').value.trim();
-            const resultBox = document.getElementById('trackResultList');
+        // 🔍 安全防護版：帶入 phone 參數向後端發起查詢，後端只回傳該電話的訂單
+async function queryOrdersByPhone() {
+    const phoneInput = document.getElementById('trackPhoneInput').value.trim();
+    const resultBox = document.getElementById('trackResultList');
 
-            if (!phone) {
-                alert('請先輸入聯絡電話！');
-                return;
+    if (!phoneInput) {
+        alert('請先輸入聯絡電話！');
+        return;
+    }
+
+    resultBox.innerHTML = '<div style="text-align:center; padding:1.5rem;"><i class="fa-solid fa-spinner fa-spin"></i> 正在安全查詢您的訂單...</div>';
+
+    try {
+        // 向 GAS 請求時精準帶入 &phone=號碼，由後端直接進行資安過濾
+        const res = await fetch(`${GAS_WEB_APP_URL}?action=getOrders&phone=${encodeURIComponent(phoneInput)}&t=${Date.now()}`);
+        const userOrders = await res.json();
+
+        if (!userOrders || userOrders.length === 0) {
+            resultBox.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:1.5rem;">查無此電話今日的訂單，請確認輸入號碼是否正確！</div>';
+            return;
+        }
+
+        // 倒序顯示，最新訂單在最上面
+        userOrders.reverse();
+
+        let html = '';
+        userOrders.forEach(o => {
+            let statusBadge = '<span class="status-badge-prep">⏳ 備餐製作中</span>';
+            if (o.status === '已完成') {
+                statusBadge = '<span class="status-badge-done">✅ 製作完成，請至櫃檯取餐！</span>';
+            } else if (o.status === '已取餐') {
+                statusBadge = '<span class="status-badge-taken">🎉 已完成取餐</span>';
             }
 
-            resultBox.innerHTML = '<div style="text-align:center; padding:1.5rem;"><i class="fa-solid fa-spinner fa-spin"></i> 正在查詢今日訂單...</div>';
+            html += `
+                <div class="order-status-card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+                        <span style="font-size:0.8rem; color:var(--text-muted);">${o.time}</span>
+                        ${statusBadge}
+                    </div>
+                    <div style="font-weight:bold; font-size:0.95rem; margin-bottom:0.2rem;">⏰ 預計取餐：${o.pickupTime}</div>
+                    <div style="font-size:0.85rem; color:var(--text-dark); margin-bottom:0.3rem;">📦 明細：${o.items}</div>
+                    <div style="font-weight:800; color:var(--accent); font-size:0.95rem;">總計：$${o.total} 元 (${o.payMethod})</div>
+                </div>
+            `;
+        });
 
-            try {
-                const res = await fetch(`${GAS_WEB_APP_URL}?action=getOrders&t=${Date.now()}`);
-                const allOrders = await res.json();
-                
-                // 過濾該電話的訂單並反轉（最新的在最上面）
-                const userOrders = allOrders.filter(o => String(o.phone).replace(/[^0-9]/g, '') === phone.replace(/[^0-9]/g, '')).reverse();
+        resultBox.innerHTML = html;
 
-                if (userOrders.length === 0) {
-                    resultBox.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:1.5rem;">查無此電話今日的訂單，請確認號碼是否正確！</div>';
-                    return;
-                }
-
-                let html = '';
-                userOrders.forEach(o => {
-                    let statusBadge = '<span class="status-badge-prep">⏳ 備餐製作中</span>';
-                    if (o.status === '已完成') {
-                        statusBadge = '<span class="status-badge-done">✅ 製作完成，請至櫃檯取餐！</span>';
-                    } else if (o.status === '已取餐') {
-                        statusBadge = '<span class="status-badge-taken">🎉 已完成取餐</span>';
-                    }
-
-                    html += `
-                        <div class="order-status-card">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
-                                <span style="font-size:0.8rem; color:var(--text-muted);">${o.time}</span>
-                                ${statusBadge}
-                            </div>
-                            <div style="font-weight:bold; font-size:0.95rem; margin-bottom:0.2rem;">⏰ 預計取餐：${o.pickupTime}</div>
-                            <div style="font-size:0.85rem; color:var(--text-dark); margin-bottom:0.3rem;">📦 品項：${o.items}</div>
-                            <div style="font-weight:800; color:var(--accent); font-size:0.95rem;">總計：$${o.total} 元 (${o.payMethod})</div>
-                        </div>
-                    `;
-                });
+    } catch (err) {
+        resultBox.innerHTML = '<div style="text-align:center; color:#ef4444; padding:1.5rem;">查詢失敗，請稍後再試！</div>';
+    }
+}
 
                 resultBox.innerHTML = html;
 
